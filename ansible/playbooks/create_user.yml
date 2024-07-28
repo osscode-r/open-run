@@ -1,0 +1,52 @@
+---
+- name: Create a non-root user
+  hosts: all
+  become: true
+  vars_prompt:
+    - name: username
+      prompt: Enter the username for the new user
+      private: false
+    - name: password
+      prompt: Enter the password for the new user
+      private: true
+
+  tasks:
+    - name: Create user
+      user:
+        name: "{{ username }}"
+        password: "{{ password | password_hash('sha512') }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+        state: present
+
+    - name: Ensure sudo is installed
+      package:
+        name: sudo
+        state: present
+      when: ansible_os_family != "Alpine"
+
+    - name: Ensure sudo is installed (Alpine Linux)
+      apk:
+        name: sudo
+        state: present
+      when: ansible_os_family == "Alpine"
+
+    - name: Ensure sudoers.d directory exists
+      file:
+        path: /etc/sudoers.d
+        state: directory
+        mode: '0755'
+
+    - name: Add sudoers file for new user
+      copy:
+        dest: "/etc/sudoers.d/{{ username }}"
+        content: "{{ username }} ALL=(ALL) NOPASSWD: ALL"
+        mode: '0440'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Set authorized key for remote user
+      authorized_key:
+        user: "{{ username }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"

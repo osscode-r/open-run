@@ -1,0 +1,51 @@
+---
+- name: Configure firewall
+  hosts: all
+  become: true
+
+  vars:
+    ufw_allowed_ports:
+      - "22" # SSH
+      - "80" # HTTP
+      - "443" # HTTPS
+    ufw_forwarded_ports: []
+    # Example: - { port: "8080", proto: "tcp" }
+
+  tasks:
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+        update_cache: yes
+
+    - name: Reset UFW to default state
+      ufw:
+        state: reset
+
+    - name: Allow incoming traffic on specific ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+      loop: "{{ ufw_allowed_ports }}"
+
+    - name: Set up port forwarding (if any)
+      ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto | default('tcp') }}"
+      loop: "{{ ufw_forwarded_ports }}"
+      when: ufw_forwarded_ports | length > 0
+
+    - name: Enable UFW and deny incoming by default
+      ufw:
+        default: deny
+        state: enabled
+
+    - name: Show UFW status
+      command: ufw status verbose
+      register: ufw_status
+      changed_when: false
+
+    - name: Display UFW status
+      debug:
+        var: ufw_status.stdout_lines

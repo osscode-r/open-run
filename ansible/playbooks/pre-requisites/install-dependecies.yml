@@ -1,0 +1,101 @@
+---
+- name: Install Dependencies
+  hosts: all
+  become: yes
+  vars:
+    domain: "{{ domain | default('') }}"
+    port: "{{ port | default(8080) }}"
+    repo_url: "{{ repo_url }}"
+
+  tasks:
+    - name: Update package cache
+      package:
+        update_cache: yes
+      when: ansible_distribution != 'Archlinux'
+
+    - name: Upgrade all packages
+      package:
+        name: '*'
+        state: latest
+      when: ansible_distribution != 'Archlinux'
+
+    - name: Update and upgrade (Arch Linux)
+      pacman:
+        update_cache: yes
+        upgrade: yes
+      when: ansible_distribution == 'Archlinux'
+
+    - name: Install common dependencies
+      package:
+        name:
+          - curl
+          - git
+          - build-essential
+        state: present
+
+    - name: Install Ansible (Debian/Ubuntu)
+      apt:
+        name: ansible
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Ansible (RedHat/CentOS)
+      yum:
+        name: ansible
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Ansible (Arch Linux)
+      pacman:
+        name: ansible
+        state: present
+      when: ansible_os_family == "Archlinux"
+
+    - name: Install Ansible (SUSE)
+      zypper:
+        name: ansible
+        state: present
+      when: ansible_os_family == "Suse"
+
+    - name: Install Docker
+      block:
+        - name: Add Docker repository
+          get_url:
+            url: https://get.docker.com
+            dest: /tmp/get-docker.sh
+            mode: '0755'
+
+        - name: Install Docker
+          shell: sh /tmp/get-docker.sh
+
+        - name: Ensure Docker service is running
+          systemd:
+            name: docker
+            state: started
+            enabled: yes
+
+    - name: Install Nginx
+      package:
+        name: nginx
+        state: present
+
+    - name: Install Certbot
+      package:
+        name: 
+          - certbot
+          - python3-certbot-nginx
+        state: present
+      when: domain != ''
+
+    - name: Install Rust
+      shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      args:
+        creates: ~/.cargo/bin/rustc
+
+    - name: Install Node.js and npm
+      package:
+        name:
+          - nodejs
+          - npm
+        state: present

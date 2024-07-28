@@ -1,0 +1,162 @@
+---
+- name: Set up Kubernetes Master Node
+  hosts: all
+  become: true
+  vars:
+    k8s_version: "v1.28"
+    pod_network_cidr: "10.10.0.0/16"
+    calico_version: "v3.28.0"
+
+  tasks:
+    # - name: Disable swap
+    #   command: swapoff -a
+
+    # - name: Comment out swap in fstab
+    #   replace:
+    #     path: /etc/fstab
+    #     regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    #     replace: '# \1'
+
+    # - name: Set hostname
+    #   hostname:
+    #     name: k8-master
+
+    # - name: Add hostname to /etc/hosts
+    #   lineinfile:
+    #     path: /etc/hosts
+    #     line: "{{ ansible_default_ipv4.address }} k8-master"
+
+    # - name: Load kernel modules
+    #   copy:
+    #     content: |
+    #       overlay
+    #       br_netfilter
+    #     dest: /etc/modules-load.d/k8s.conf
+
+    # - name: Load overlay module
+    #   modprobe:
+    #     name: overlay
+    #     state: present
+
+    # - name: Load br_netfilter module
+    #   modprobe:
+    #     name: br_netfilter
+    #     state: present
+
+    # - name: Set sysctl params
+    #   sysctl:
+    #     name: "{{ item.name }}"
+    #     value: "{{ item.value }}"
+    #     state: present
+    #   loop:
+    #     - { name: "net.bridge.bridge-nf-call-iptables", value: "1" }
+    #     - { name: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
+    #     - { name: "net.ipv4.ip_forward", value: "1" }
+
+    # - name: Install required packages
+    #   apt:
+    #     name:
+    #       - gnupg
+    #       - apt-transport-https
+    #       - ca-certificates
+    #       - curl
+    #     state: present
+    #     update_cache: yes
+
+    - name: Ensure /etc/apt/keyrings directory exists
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+        
+    - name: Add Kubernetes GPG apt key
+      ansible.builtin.get_url:
+        url: "https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/deb/Release.key"
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: "0644"
+
+    - name: Add Kubernetes repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/deb/ /"
+        state: present
+        filename: kubernetes
+        update_cache: yes
+
+    - name: Install Kubernetes components
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+
+    - name: Configure containerd
+      shell: |
+        mkdir -p /etc/containerd
+        containerd config default > /etc/containerd/config.toml
+        sed -i 's/ SystemdCgroup = false/ SystemdCgroup = true/' /etc/containerd/config.toml
+
+    - name: Restart containerd and kubelet
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      loop:
+        - containerd
+        - kubelet
+
+    - name: Pull Kubernetes images
+      command: kubeadm config images pull
+
+    - name: Initialize Kubernetes cluster
+      command: kubeadm init --pod-network-cidr={{ pod_network_cidr }}
+      register: kubeadm_init
+
+    - name: Create .kube directory
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: "0755"
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: $HOME/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: "0644"
+
+    - name: Apply Calico operator
+      command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
+
+    - name: Download Calico custom resources file
+      get_url:
+        url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/custom-resources.yaml"
+        dest: /tmp/custom-resources.yaml
+
+    - name: Update Calico custom resources with correct CIDR
+      replace:
+        path: /tmp/custom-resources.yaml
+        regexp: 'cidr: 192\.168\.0\.0/16'
+        replace: "cidr: {{ pod_network_cidr }}"
+
+    - name: Apply Calico custom resources
+      command: kubectl apply -f /tmp/custom-resources.yaml
+
+    - name: Get nodes
+      command: kubectl get nodes
+      register: get_nodes
+
+    - name: Display nodes
+      debug:
+        var: get_nodes.stdout_lines
+
+    - name: Get pods
+      command: kubectl get pods -A
+      register: get_pods
+
+    - name: Display pods
+      debug:
+        var: get_pods.stdout_lines

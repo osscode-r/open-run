@@ -1,0 +1,32 @@
+---
+- name: Set timezone and configure timesyncd
+  hosts: "*"
+  become: true
+  vars:
+    timezone: "Asia/Kolkata"
+    ntp_server: "time.cloudflare.com"
+
+  tasks:
+    - name: Set timezone
+      timezone:
+        name: "{{ timezone }}"
+
+    - name: Stop timesyncd
+      systemd:
+        name: systemd-timesyncd.service
+        state: stopped
+
+    - name: Configure timesyncd
+      copy:
+        content: |
+          [Time]
+          NTP={{ ntp_server }}
+          FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
+        dest: /etc/systemd/timesyncd.conf
+        mode: '0644'
+
+    - name: Start timesyncd
+      systemd:
+        name: systemd-timesyncd.service
+        state: started
+        enabled: yes
