@@ -1,21 +1,3 @@
-// import React from 'react';
-
-// const Header: React.FC = () => {
-//     return (
-//         <header className="bg-white shadow">
-//             <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-//                 <div className="text-2xl font-bold text-background">My Landing Page</div>
-//                 <nav>
-//                     <a href="#features" className="mx-2 text-gray-700 hover:text-gray-900">Features</a>
-//                     <a href="#cta" className="mx-2 text-gray-700 hover:text-gray-900">Get Started</a>
-//                 </nav>
-//             </div>
-//         </header>
-//     );
-// };
-
-// export default Header;
-
 import Link from "next/link"
 
 import { siteConfig } from "@/config/site"
@@ -29,7 +11,7 @@ import { buttonVariants } from "@/components/ui/button"
 
 export function Header() {
     return (
-        <header className="sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-50 w-full border-border/40  backdrop-blur ">
             <div className="container flex h-14 max-w-screen-2xl items-center">
                 <MainNav />
                 <MobileNav />
