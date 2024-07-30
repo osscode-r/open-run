@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CronJobData, JobStatus } from '../types';
 import { ArrowLeft } from 'lucide-react';
 import { CronJobForm } from '../components/CronJobForm';
+import DashboardLayout from '@/app/home/page';
 
 interface CronJobProps {
     initialJob?: Partial<CronJobData>;
@@ -36,18 +37,9 @@ function CronJob({ initialJob = {} }: CronJobProps) {
     const isNewJob = !initialJob.id;
 
     return (
-        <div className='container py-10'>
-            <Button
-                variant='outline'
-                onClick={() => router.back()}
-                className='mt-6 mb-10'
-            >
-                <span className='sr-only'>Back</span>
-                <ArrowLeft className='w-4 h-4 mr-2' />
-                Back
-            </Button>
+        <DashboardLayout>
             <CronJobForm initialJob={combinedInitialJob} onSubmit={onSubmit} isNewJob={isNewJob} />
-        </div>
+        </DashboardLayout>
     );
 }
 

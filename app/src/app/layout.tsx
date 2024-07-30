@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <body className={`${Source_Sans_Pro.className} flex flex-col min-h-screen`}>
+      <body className={`${Source_Sans_Pro.className} flex flex-col min-h-screen bg-background text-foreground`}>
         <Provider store={store}>
           <ThemeProvider
             attribute="class"

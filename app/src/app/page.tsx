@@ -1,10 +1,11 @@
 "use client";
 import * as React from "react";
+import Landing from "./landing/landing";
 
-export default function Home() {  
+export default function Home() {
   return (
-    <main className="flex  h-screen flex-col items-center justify-between">
-      <h1 className="text-3xl font-bold">Hello World</h1>
+    <main className="">
+      <Landing />
     </main>
   );
 }

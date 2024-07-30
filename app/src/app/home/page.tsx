@@ -1,20 +1,70 @@
-import React from 'react';
-// import Header from './components/Header';
-import HeroSection from './components/HeroSection';
-import Features from './components/Features';
-import CTASection from './components/CTASection';
-// import Footer from './components/Footer';
+"use client"
+import React from 'react'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import Sidebar from './components/sidebar'
+import Header from './components/header'
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
-const App: React.FC = () => {
+interface BreadcrumbItem {
+    href: string;
+    label: string;
+}
+
+const DashboardLayout = ({ children }: React.PropsWithChildren) => {
+    const pathname = usePathname()
+
+    const getBreadcrumbs = (): BreadcrumbItem[] => {
+        const asPathNestedRoutes = pathname.split("/").filter(v => v.length > 0)
+
+        const crumblist = asPathNestedRoutes.map((subpath, idx) => {
+            const href = "/" + asPathNestedRoutes.slice(0, idx + 1).join("/")
+            return { href, label: subpath.charAt(0).toUpperCase() + subpath.slice(1) }
+        })
+
+        return [{ href: "/home", label: "Dashboard" }, ...crumblist]
+    }
+
+    const breadcrumbs = getBreadcrumbs()
+
     return (
-        <div>
-            {/* <Header /> */}
-            <HeroSection />
-            <Features />
-            <CTASection />
-            {/* <Footer /> */}
+        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+            <Sidebar />
+            <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+                <Header />
+                <div className="px-4 sm:px-6">
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            {breadcrumbs.map((crumb, index) => (
+                                <React.Fragment key={crumb.href}>
+                                    <BreadcrumbItem>
+                                        {index === breadcrumbs.length - 1 ? (
+                                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                                        ) : (
+                                            <BreadcrumbLink asChild>
+                                                <Link href={crumb.href}>{crumb.label}</Link>
+                                            </BreadcrumbLink>
+                                        )}
+                                    </BreadcrumbItem>
+                                    {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                                </React.Fragment>
+                            ))}
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                </div>
+                <main className="flex-1 p-4 sm:px-6 sm:py-0 container">
+                    {children}
+                </main>
+            </div>
         </div>
-    );
-};
+    )
+}
 
-export default App;
+export default DashboardLayout
