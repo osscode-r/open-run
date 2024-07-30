@@ -1,0 +1,49 @@
+"use client";
+
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import CronJobTemplates from '../components/CronJobTemplates';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { CronJobData, JobStatus } from '../types';
+import { CronJobForm } from '../components/CronJobForm';
+
+const emptyJob: Partial<CronJobData> = {
+    name: '',
+    description: '',
+    schedule: '',
+    command: '',
+    bashScript: '',
+    isActive: true,
+    lastRun: new Date().toISOString(),
+    nextRun: new Date().toISOString(),
+    status: JobStatus.STOPPED,
+};
+
+function CreateCronJob() {
+    return (
+        <div className='container mx-auto py-10'>
+            <Card className='border-0'>
+                <CardHeader>
+                    <CardTitle>Create a New Cron Job</CardTitle>
+                    <CardDescription>Select a template or create a custom cron job</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="template">
+                        <TabsList className="grid w-fit grid-cols-2">
+                            <TabsTrigger value="template">Use Template</TabsTrigger>
+                            <TabsTrigger value="custom">Create Custom</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="template">
+                            <CronJobTemplates />
+                        </TabsContent>
+                        <TabsContent value="custom">
+                            <CronJobForm initialJob={emptyJob} onSubmit={() => { }} isNewJob />
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+export default CreateCronJob;

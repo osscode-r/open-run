@@ -1,0 +1,95 @@
+# Daily Backup
+daily_backup:
+  schedule: "0 1 * * *"
+  command: "/usr/bin/backup_script.sh"
+  description: "Perform daily backup at 1 AM"
+
+# Weekly Log Rotation
+weekly_log_rotation:
+  schedule: "0 0 * * 0"
+  command: "/usr/sbin/logrotate /etc/logrotate.conf"
+  description: "Rotate logs every Sunday at midnight"
+
+# Monthly System Update
+monthly_system_update:
+  schedule: "0 3 1 * *"
+  command: "apt update && apt upgrade -y"
+  description: "Update system packages on the 1st of every month at 3 AM"
+
+# Hourly Database Backup
+hourly_db_backup:
+  schedule: "0 * * * *"
+  command: "/usr/local/bin/db_backup.sh"
+  description: "Backup database every hour"
+
+# Daily Disk Space Check
+daily_disk_check:
+  schedule: "30 23 * * *"
+  command: "df -h > /var/log/disk_space.log"
+  description: "Check disk space usage daily at 11:30 PM"
+
+# Weekly File Cleanup
+weekly_cleanup:
+  schedule: "0 2 * * 6"
+  command: "find /tmp -type f -atime +7 -delete"
+  description: "Delete files in /tmp older than 7 days every Saturday at 2 AM"
+
+# Custom Job Template
+custom_job:
+  schedule: "* * * * *"
+  command: "/path/to/your/script.sh"
+  description: "Custom job description"
+
+# Daily System Health Check
+daily_health_check:
+  schedule: "0 7 * * *"
+  command: "/usr/local/bin/system_health_check.sh"
+  description: "Run system health check daily at 7 AM"
+
+# Quarterly Full System Backup
+quarterly_full_backup:
+  schedule: "0 4 1 */3 *"
+  command: "/usr/local/bin/full_system_backup.sh"
+  description: "Perform full system backup on the 1st day of every 3rd month at 4 AM"
+
+# Weekly Security Scan
+weekly_security_scan:
+  schedule: "0 2 * * 5"
+  command: "/usr/bin/clamscan -r /"
+  description: "Run a full system virus scan every Friday at 2 AM"
+
+# Daily Database Optimization
+daily_db_optimize:
+  schedule: "0 4 * * *"
+  command: "/usr/local/bin/optimize_databases.sh"
+  description: "Optimize database tables daily at 4 AM"
+
+# Bi-weekly Network Config Backup
+biweekly_network_backup:
+  schedule: "0 3 1,15 * *"
+  command: "/usr/local/bin/backup_network_configs.sh"
+  description: "Backup network device configurations on the 1st and 15th of each month at 3 AM"
+
+# Every 5 Minutes Server Health Check
+frequent_health_check:
+  schedule: "*/5 * * * *"
+  command: "/usr/local/bin/quick_health_check.sh"
+  description: "Run a quick server health check every 5 minutes"
+
+# Yearly Archive
+yearly_archive:
+  schedule: "0 5 1 1 *"
+  command: "/usr/local/bin/yearly_archive.sh"
+  description: "Create yearly archive on January 1st at 5 AM"
+
+# Weekday Working Hours Monitoring
+workday_monitoring:
+  schedule: "*/15 9-17 * * 1-5"
+  command: "/usr/local/bin/monitor_services.sh"
+  description: "Monitor critical services every 15 minutes during work hours (9 AM - 5 PM, Monday to Friday)"
+
+# Monthly Report Generation
+monthly_report:
+  schedule: "0 6 1 * *"
+  command: "/usr/local/bin/generate_monthly_report.sh"
+  description: "Generate and email monthly report on the 1st of each month at 6 AM"
