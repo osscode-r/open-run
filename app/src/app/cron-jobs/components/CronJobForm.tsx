@@ -56,10 +56,10 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                     {isNewJob ? '' : `Edit Cron Job: ${initialJob.name}`}
                 </h1>
                 <div>
-                    <Button variant='outline' onClick={() => setYamlView(!yamlView)} className='mr-2'>
+                    <Button variant={'secondary'} size={'lg'} onClick={() => setYamlView(!yamlView)} className='mr-2'>
                         {yamlView ? 'Normal View' : 'Developer View'}
                     </Button>
-                    <Button onClick={form.handleSubmit(onSubmit)}>
+                    <Button size={'lg'} onClick={form.handleSubmit(onSubmit)}>
                         {initialJob.id ? 'Save' : 'Create'}
                     </Button>
                 </div>
@@ -76,115 +76,121 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                 </div>
             ) : (
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Name</FormLabel>
-                                <FormControl>
-                                    <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="col-span-1 space-y-5">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                    <Textarea {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Description</FormLabel>
+                                        <FormControl>
+                                            <Textarea {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    <FormField
-                        control={form.control}
-                        name="schedule"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Schedule (Cron Expression)</FormLabel>
-                                <FormControl>
-                                    <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="bashScript"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Bash Script</FormLabel>
-                                <FormControl>
-                                    <AceEditorComponent
-                                        mode="sh"
-                                        onChange={field.onChange}
-                                        value={field.value || ''}
-                                        name="bash-editor"
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="command"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Run Command</FormLabel>
-                                <FormControl>
-                                    <Textarea {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="isActive"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                    <FormLabel className="text-base">Active</FormLabel>
-                                    <FormDescription>
-                                        Toggle to activate or deactivate the cron job
-                                    </FormDescription>
+                            <FormField
+                                control={form.control}
+                                name="schedule"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Schedule (Cron Expression)</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="isActive"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                        <div className="space-y-0.5">
+                                            <FormLabel className="text-base">Active</FormLabel>
+                                            <FormDescription>
+                                                Toggle to activate or deactivate the cron job
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <div className='col-span-2 grid grid-cols-1 lg:grid-cols-2 space-y-5'>
+                                <div className='mt-5'>
+                                    <FormLabel>Status</FormLabel>
+                                    <p>{form.watch('status')}</p>
                                 </div>
-                                <FormControl>
-                                    <Switch
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                    />
-                                </FormControl>
-                            </FormItem>
-                        )}
-                    />
 
-                    <div>
-                        <FormLabel>Status</FormLabel>
-                        <p>{form.watch('status')}</p>
-                    </div>
+                                <div className='mt-5'>
+                                    <FormLabel>Last Run</FormLabel>
+                                    <p>{new Date(form.watch('lastRun')).toLocaleString()}</p>
+                                </div>
 
-                    <div>
-                        <FormLabel>Last Run</FormLabel>
-                        <p>{new Date(form.watch('lastRun')).toLocaleString()}</p>
-                    </div>
+                                <div className='mt-5'>
+                                    <FormLabel>Next Run</FormLabel>
+                                    <p>{new Date(form.watch('nextRun')).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-span-1 space-y-5">
+                            <FormField
+                                control={form.control}
+                                name="bashScript"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Bash Script</FormLabel>
+                                        <FormControl>
+                                            <AceEditorComponent
+                                                mode="sh"
+                                                onChange={field.onChange}
+                                                value={field.value || ''}
+                                                name="bash-editor"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    <div>
-                        <FormLabel>Next Run</FormLabel>
-                        <p>{new Date(form.watch('nextRun')).toLocaleString()}</p>
+                            <FormField
+                                control={form.control}
+                                name="command"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Run Command</FormLabel>
+                                        <FormControl>
+                                            <Textarea {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
                     </div>
                 </form>
             )}

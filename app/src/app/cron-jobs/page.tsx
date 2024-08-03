@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSortableSearchableData } from './hooks/useSortableSearchData';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '../home/page';
+import CreateCronJob from './create/page';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -62,6 +63,8 @@ function CronJobs() {
         currentPage * ITEMS_PER_PAGE
     );
 
+    const paginatedJobs2: any[] = [];
+
     const handlePageChange = (pageNumber: React.SetStateAction<number>) => {
         setCurrentPage(pageNumber);
     };
@@ -71,52 +74,59 @@ function CronJobs() {
     }
 
     return (
-        <DashboardLayout>
-            <div className='flex flex-col '>
-                <div className='flex justify-between items-center'>
-                    <div className='flex items-center my-10 space-x-4'>
-                        <h1 className='text-3xl font-bold'>Cron Jobs</h1>
-                        <div className="relative">
-                            <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-                            <Input
-                                type="text"
-                                placeholder="Search jobs..."
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                                className="pl-8 w-64"
+        <>
+            {paginatedJobs2.length > 0 ? (
+                <DashboardLayout>
+                    <div className='flex flex-col '>
+                        <div className='flex justify-between items-center'>
+                            <div className='flex items-center my-10 space-x-4'>
+                                <h1 className='text-3xl font-bold'>Cron Jobs</h1>
+                                <div className="relative">
+                                    <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search jobs..."
+                                        value={searchTerm}
+                                        onChange={handleSearchChange}
+                                        className="pl-8 w-64"
+                                    />
+                                </div>
+                                <Select
+                                    onValueChange={(value) => handleSortChange(value.split('_')[0] as 'name' | 'tag')}
+                                    defaultValue="name_asc"
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Sort by" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                                        <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                                        <SelectItem value="tag_asc">Status (A-Z)</SelectItem>
+                                        <SelectItem value="tag_desc">Status (Z-A)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button variant={'outline'} onClick={() => router.push('/cron-jobs/create')} >Create <PlusIcon className='ml-2 h-4 w-4' /></Button>
+                        </div>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8'>
+                            {paginatedJobs2.map((job, index) => (
+                                <CronJobCard key={index} job={job} JobStatus={JobStatus} onEditCronJob={onEditCronJob} />
+                            ))}
+                        </div>
+                        <div className="mt-8 flex justify-center">
+                            <PaginateComp
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
                             />
                         </div>
-                        <Select
-                            onValueChange={(value) => handleSortChange(value.split('_')[0] as 'name' | 'tag')}
-                            defaultValue="name_asc"
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Sort by" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                                <SelectItem value="name_desc">Name (Z-A)</SelectItem>
-                                <SelectItem value="tag_asc">Status (A-Z)</SelectItem>
-                                <SelectItem value="tag_desc">Status (Z-A)</SelectItem>
-                            </SelectContent>
-                        </Select>
                     </div>
-                    <Button variant={'outline'} onClick={() => router.push('/cron-jobs/create')} >Create <PlusIcon className='ml-2 h-4 w-4' /></Button>
-                </div>
-                <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8'>
-                    {paginatedJobs.map((job, index) => (
-                        <CronJobCard key={index} job={job} JobStatus={JobStatus} onEditCronJob={onEditCronJob} />
-                    ))}
-                </div>
-                <div className="mt-8 flex justify-center">
-                    <PaginateComp
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={handlePageChange}
-                    />
-                </div>
-            </div>
-        </DashboardLayout>
+                </DashboardLayout>
+            ) : (
+                <CreateCronJob />
+            )}
+        </>
+
     );
 }
 
