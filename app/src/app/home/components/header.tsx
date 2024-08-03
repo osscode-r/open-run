@@ -25,6 +25,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ModeToggle } from '@/components/ui/mode-toggle'
+import { useAuth } from '@/app/login/hooks/useAuth'
 
 interface MobileNavItemProps {
     href: string;
@@ -44,6 +45,8 @@ const MobileNavItem: React.FC<MobileNavItemProps> = ({ href, icon: Icon, label }
 
 
 const Header = () => {
+    const { logout } = useAuth();
+
     return (
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <Sheet>
@@ -107,7 +110,7 @@ const Header = () => {
                     <DropdownMenuItem>Settings</DropdownMenuItem>
                     <DropdownMenuItem>Support</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Logout</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => logout()}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </header>

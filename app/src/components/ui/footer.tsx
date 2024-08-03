@@ -11,7 +11,6 @@ import React from "react";
 import { Separator } from "./separator";
 
 function Footer() {
-    const user = useAppSelector((state) => state.authState.user);
     return (
         <div className="w-full bg-secondary">
             <Separator />
@@ -19,7 +18,6 @@ function Footer() {
                 <footer className="p-6 py-20">
                     <div className=" mx-auto space-y-5 ">
                         <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-3">
-                            <Navigation isSubscribed={user?.isSubscribed || false} userUrl={user?.url} />
                         </div>
                         <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-3">
                             <div className="flex flex-col space-y-4">

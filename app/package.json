@@ -66,6 +66,7 @@
     "react-share-social": "^0.1.60",
     "react-virtualized": "^9.22.5",
     "recharts": "^2.12.7",
+    "redux-persist": "^6.0.0",
     "sharp": "^0.33.4",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",

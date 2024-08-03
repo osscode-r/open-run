@@ -1,18 +1,37 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore, ConfigureStoreOptions } from "@reduxjs/toolkit";
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import storage from "redux-persist/lib/storage";
+import { authApi } from "@/redux/services/users/authApi";
 import authReducer from "@/redux/features/users/authSlice";
-import { authApi } from "./services/users/authApi";
+import { cronJobsApi } from "./services/cronJobsApi";
 
-export const store = configureStore({
-    reducer: {
-        authState: authReducer,
-        [authApi.reducerPath]: authApi.reducer
-    },
-    devTools: process.env.NODE_ENV !== "production",
+const persistConfig = {
+  key: "root",
+  storage,
+  whitelist: ["auth"],
+};
 
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware({}).concat([
-        authApi.middleware
-    ]),
+const rootReducer = combineReducers({
+  [authApi.reducerPath]: authApi.reducer,
+  auth: authReducer,
+  [cronJobsApi.reducerPath]: cronJobsApi.reducer
 });
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+const storeOptions: ConfigureStoreOptions = {
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(authApi.middleware, cronJobsApi.middleware),
+};
+
+export const store = configureStore(storeOptions);
+
+export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
