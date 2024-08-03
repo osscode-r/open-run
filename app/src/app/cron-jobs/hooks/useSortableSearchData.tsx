@@ -16,7 +16,7 @@ export function useSortableSearchableData<T>(
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>(initialSortConfig);
 
   const filteredAndSortedData = useMemo(() => {
-    let result = data.filter(item =>
+    let result = data?.filter(item =>
       searchKeys.some(key =>
         String(item[key]).toLowerCase().includes(searchTerm.toLowerCase())
       )

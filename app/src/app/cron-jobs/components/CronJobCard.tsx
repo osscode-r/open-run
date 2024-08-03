@@ -30,13 +30,10 @@ function CronJobCard({ job, JobStatus, onEditCronJob }: CronJobProps) {
                     <p className='text-sm text-muted-foreground truncate'>{job.description}</p>
                     <p className='text-sm text-muted-foreground'>Schedule: {job.schedule}</p>
                     <p className='text-sm text-muted-foreground'>
-                        Last run: {new Date(job.lastRun).toLocaleString()}
+                        Last run: {new Date(job.last_run).toLocaleString()}
                     </p>
-                    <p className='text-sm text-muted-foreground'>
-                        Next run: {new Date(job.nextRun).toLocaleString()}
-                    </p>
-                    <Badge variant={job.isActive ? "default" : "secondary"}>
-                        {job.isActive ? "Active" : "Inactive"}
+                    <Badge variant={job.is_active ? "default" : "secondary"}>
+                        {job.is_active ? "Active" : "Inactive"}
                     </Badge>
                 </div>
             </CardContent>

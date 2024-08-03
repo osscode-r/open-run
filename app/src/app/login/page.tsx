@@ -1,15 +1,53 @@
 "use client";
+
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { BookOpen } from "lucide-react"
-import { useRouter } from "next/navigation"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { useAuth } from "./hooks/useAuth";
+
+const formSchema = z.object({
+  email_or_username: z.string({
+    message: "Please enter a valid username or email address.",
+  }),
+  password: z.string().min(4, {
+    message: "Password must be at least 5 characters.",
+  }),
+})
 
 export default function Login() {
   const router = useRouter()
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email_or_username: "",
+      password: "",
+    },
+  })
+
+  const { login } = useAuth();
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const { email_or_username, password } = values
+    await login(email_or_username, password);
+    router.push('/home')
+  }
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
@@ -36,36 +74,51 @@ export default function Login() {
                 Login using email
               </p>
             </div>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email_or_username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email or Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="m@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="ml-auto inline-block text-sm"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input id="password" type="password" placeholder="Password" required />
-              </div>
-              <Button type="submit" className="w-full" onClick={() => router.push('/home')}>
-                Login
-              </Button>
-              <div className="w-full">
-                <p className="text-balance text-sm text-muted-foreground text-center">
-                  By signing up you agree to our <Link href={'/'} shallow className="text-primary hover:text-primary">terms</Link> and <Link href={'/'} shallow className="text-primary hover:text-primary">privacy</Link> policy.
-                </p>
-              </div>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center">
+                        <FormLabel>Password</FormLabel>
+                        <Link
+                          href="/forgot-password"
+                          className="ml-auto inline-block text-sm"
+                        >
+                          Forgot your password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <Input type="password" placeholder="Password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full">
+                  Login
+                </Button>
+              </form>
+            </Form>
+            <div className="w-full">
+              <p className="text-balance text-sm text-muted-foreground text-center">
+                By signing up you agree to our <Link href={'/'} shallow className="text-primary hover:text-primary">terms</Link> and <Link href={'/'} shallow className="text-primary hover:text-primary">privacy</Link> policy.
+              </p>
             </div>
           </div>
         </div>
