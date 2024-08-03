@@ -10,22 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSortableSearchableData } from './hooks/useSortableSearchData';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '../home/page';
+import { useGetAllCronJobsQuery } from '@/redux/services/cronJobsApi';
 
 const ITEMS_PER_PAGE = 8;
-
-const generateSampleJobs = (count: number) => {
-    return Array.from({ length: count }, (_, index) => ({
-        id: `${index + 1}`,
-        name: `Job ${index + 1}`,
-        description: `Job ${index + 1} description`,
-        schedule: '0 0 * * *',
-        command: `command for job ${index + 1}`,
-        isActive: index % 3 === 0,
-        lastRun: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-        nextRun: new Date(Date.now() + Math.random() * 10000000000).toISOString(),
-        tag: (index % 2) ? JobStatus.RUNNING : JobStatus.STOPPED,
-    }));
-};
 
 export interface CronJob {
     id: string;
@@ -33,13 +20,11 @@ export interface CronJob {
     description: string;
     schedule: string;
     command: string;
-    isActive: boolean;
-    lastRun: string;
-    nextRun: string;
+    is_active: boolean;
+    last_run: string;
+    next_run: string;
     tag: string;
 }
-
-const allJobs = generateSampleJobs(50);
 
 export enum JobStatus {
     RUNNING = 'Running',
@@ -49,12 +34,17 @@ export enum JobStatus {
 function CronJobs() {
     const [currentPage, setCurrentPage] = useState(1);
     const router = useRouter();
+    const { data: allJobs, isLoading } = useGetAllCronJobsQuery({});
     const {
         filteredAndSortedData: filteredAndSortedJobs,
         searchTerm,
         handleSearchChange,
         handleSortChange,
-    } = useSortableSearchableData(allJobs, ['name', 'description'], { key: 'name', direction: 'asc' });
+    } = useSortableSearchableData<CronJob>(
+        allJobs || [],
+        ['name', 'description'],
+        { key: 'name', direction: 'asc' }
+    );
 
     const totalPages = Math.ceil(filteredAndSortedJobs.length / ITEMS_PER_PAGE);
     const paginatedJobs = filteredAndSortedJobs.slice(
@@ -62,12 +52,16 @@ function CronJobs() {
         currentPage * ITEMS_PER_PAGE
     );
 
-    const handlePageChange = (pageNumber: React.SetStateAction<number>) => {
+    const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
     };
 
     function onEditCronJob(id: string) {
         router.push('/cron-jobs/' + id);
+    }
+
+    if (isLoading) {
+        return <div>Loading...</div>;
     }
 
     return (
@@ -87,7 +81,7 @@ function CronJobs() {
                             />
                         </div>
                         <Select
-                            onValueChange={(value) => handleSortChange(value.split('_')[0] as 'name' | 'tag')}
+                            onValueChange={(value) => handleSortChange(value.split('_')[0] as keyof CronJob)}
                             defaultValue="name_asc"
                         >
                             <SelectTrigger className="w-[180px]">
@@ -105,7 +99,7 @@ function CronJobs() {
                 </div>
                 <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8'>
                     {paginatedJobs.map((job, index) => (
-                        <CronJobCard key={index} job={job} JobStatus={JobStatus} onEditCronJob={onEditCronJob} />
+                        <CronJobCard key={job.id} job={job} JobStatus={JobStatus} onEditCronJob={onEditCronJob} />
                     ))}
                 </div>
                 <div className="mt-8 flex justify-center">

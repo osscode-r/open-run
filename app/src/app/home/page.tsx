@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from './components/sidebar'
 import Header from './components/header'
@@ -12,6 +12,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useAuth } from '../login/hooks/useAuth'
 
 interface BreadcrumbItem {
     href: string;
@@ -20,7 +21,8 @@ interface BreadcrumbItem {
 
 const DashboardLayout = ({ children }: React.PropsWithChildren) => {
     const pathname = usePathname()
-
+    const router = useRouter()
+    const { isAuthenticated } = useAuth();
     const getBreadcrumbs = (): BreadcrumbItem[] => {
         const asPathNestedRoutes = pathname.split("/").filter(v => v.length > 0)
 
@@ -33,7 +35,10 @@ const DashboardLayout = ({ children }: React.PropsWithChildren) => {
     }
 
     const breadcrumbs = getBreadcrumbs()
-
+    if(!isAuthenticated) {
+        router.push('/login')
+        return <div className="flex h-screen w-full items-center justify-center">Please login to continue</div>
+    }
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <Sidebar />
