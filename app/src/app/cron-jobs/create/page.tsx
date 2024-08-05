@@ -4,20 +4,18 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import CronJobTemplates from '../components/CronJobTemplates';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { CronJobData, JobStatus } from '../types';
+import { CronJob } from '../types';
 import { CronJobForm } from '../components/CronJobForm';
 import DashboardLayout from '@/app/home/page';
 
-const emptyJob: Partial<CronJobData> = {
+const emptyJob: Partial<CronJob> = {
     name: '',
     description: '',
     schedule: '',
     command: '',
-    bashScript: '',
-    isActive: true,
-    lastRun: new Date().toISOString(),
-    nextRun: new Date().toISOString(),
-    status: JobStatus.STOPPED,
+    bash_script: '',
+    is_active: true,
+    last_run_at: ""
 };
 
 function CreateCronJob() {

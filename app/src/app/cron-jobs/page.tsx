@@ -59,13 +59,15 @@ function CronJobs() {
                     onCreateClick={() => router.push('/cron-jobs/create')}
                 />
                 <CronJobList jobs={paginatedJobs} onEditCronJob={onEditCronJob} />
-                <div className="mt-8 flex justify-center">
-                    <PaginateComp
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={handlePageChange}
-                    />
-                </div>
+                { totalPages > 1 &&
+                    <div className="mt-8 flex justify-center">
+                        <PaginateComp
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
+                    </div>
+                }
             </div>
         </DashboardLayout>
     );

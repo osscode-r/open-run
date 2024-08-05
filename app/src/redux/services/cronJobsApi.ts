@@ -23,8 +23,35 @@ export const cronJobsApi = createApi({
                 method: 'GET',
             }),
             transformResponse: (response: { data: any; }) => response.data,
-        })
+        }),
+        getCronJobById: builder.query<any, string>({
+            query: (id) => ({
+                url: CRONJOBURLS.CRON_JOBS + `/${id}`,
+                method: 'GET',
+            }),
+            transformResponse: (response: { data: any; }) => response.data,
+        }),
+        updateCronJobById: builder.mutation<any, any>({
+            query: (data) => ({
+                url: CRONJOBURLS.CRON_JOBS + `/${data.id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            transformResponse: (response: { data: any; }) => response.data,
+        }),
+        deleteCronJobById: builder.mutation<any, string>({
+            query: (id) => ({
+                url: CRONJOBURLS.CRON_JOBS + `/${id}`,
+                method: 'DELETE',
+            }),
+            transformResponse: (response: { data: any; }) => response.data,
+        }),
     }),
 });
 
-export const { useGetAllCronJobsQuery } = cronJobsApi;
+export const {
+    useGetAllCronJobsQuery,
+    useGetCronJobByIdQuery,
+    useUpdateCronJobByIdMutation,
+    useDeleteCronJobByIdMutation
+} = cronJobsApi;

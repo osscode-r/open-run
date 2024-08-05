@@ -1,6 +1,6 @@
 import React from 'react';
 import CronJobCard from './CronJobCard';
-import { CronJob, JobStatus } from '../types';
+import { CronJob } from '../types';
 
 interface CronJobProps {
     jobs: CronJob[];
