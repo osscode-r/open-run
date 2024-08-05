@@ -16,12 +16,6 @@ monthly_system_update:
   command: "apt update && apt upgrade -y"
   description: "Update system packages on the 1st of every month at 3 AM"
 
-# Hourly Database Backup
-hourly_db_backup:
-  schedule: "0 * * * *"
-  command: "/usr/local/bin/db_backup.sh"
-  description: "Backup database every hour"
-
 # Daily Disk Space Check
 daily_disk_check:
   schedule: "30 23 * * *"
@@ -33,6 +27,13 @@ weekly_cleanup:
   schedule: "0 2 * * 6"
   command: "find /tmp -type f -atime +7 -delete"
   description: "Delete files in /tmp older than 7 days every Saturday at 2 AM"
+  
+# Hourly Database Backup
+hourly_db_backup:
+  schedule: "0 * * * *"
+  command: "/usr/local/bin/db_backup.sh"
+  description: "Backup database every hour"
+
 
 # Custom Job Template
 custom_job:

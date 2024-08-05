@@ -27,7 +27,8 @@ function CronJobCard({ job, onEditCronJob }: CronJobProps) {
             <CardContent>
                 <div className="space-y-2">
                     <p className='text-sm text-muted-foreground truncate'>{job.description}</p>
-                    <p className='text-sm text-muted-foreground'>Schedule: {job.schedule}</p>
+                    <p className='text-sm text-muted-foreground'>{job.schedule}</p>
+                    <p className='text-sm text-muted-foreground truncate'>{job.command}</p>
                     <p className='text-sm text-muted-foreground'>
                         Last run: {isNaN(Date.parse(job.last_run_at || "")) ? 'Not run yet' : new Date(job.last_run_at || "").toLocaleString()}
                     </p>

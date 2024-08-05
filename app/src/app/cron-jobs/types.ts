@@ -33,6 +33,7 @@ export const updateCronJobRequestSchema = z.object({
     name: z.string(),
     bash_script: z.string().optional(),
     is_active: z.boolean(),
+    id: z.string().optional(),
 });
 
 export type UpdateCronJobRequest = z.infer<typeof updateCronJobRequestSchema>;
@@ -54,3 +55,21 @@ export const cronJobListResponseSchema = z.object({
 export type CronJobListResponse = z.infer<typeof cronJobListResponseSchema>;
 
 export const yamlFields: (keyof CronJob)[] = ['name', 'description', 'schedule', 'command', 'bash_script', 'is_active'];
+
+export interface CronTemplate {
+    name: string;
+    description?: string;
+    schedule: string;
+    command: string;
+    bash_script?: string;
+}
+
+export const emptyJob: Partial<CronJob> = {
+    name: '',
+    description: '',
+    schedule: '',
+    command: '',
+    bash_script: '',
+    is_active: true,
+    last_run_at: ""
+};

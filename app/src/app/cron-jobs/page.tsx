@@ -1,14 +1,16 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import PaginateComp from '@/components/paginate';
 import { useSortableSearchableData } from './hooks/useSortableSearchData';
-import { useRouter } from 'next/navigation';
 import DashboardLayout from '../home/page';
 import CreateCronJob from './create/page';
 import { useGetAllCronJobsQuery } from '@/redux/services/cronJobsApi';
 import { CronJob } from './types';
 import CronJobList from './components/CronJobsList';
 import CronJobsHeader from './components/CronJobsHeader';
+import { SortOption } from './components/SortSelect';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -16,16 +18,22 @@ function CronJobs() {
     const [currentPage, setCurrentPage] = useState(1);
     const router = useRouter();
     const { data: allJobs, isLoading } = useGetAllCronJobsQuery({});
+
     const {
         filteredAndSortedData: filteredAndSortedJobs,
         searchTerm,
         handleSearchChange,
         handleSortChange,
+        sortConfig,
     } = useSortableSearchableData<CronJob>(
         allJobs || [],
         ['name', 'description'],
         { key: 'name', direction: 'asc' }
     );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, sortConfig]);
 
     const totalPages = Math.ceil(filteredAndSortedJobs.length / ITEMS_PER_PAGE);
     const paginatedJobs = filteredAndSortedJobs.slice(
@@ -39,6 +47,10 @@ function CronJobs() {
 
     const onEditCronJob = (id: string) => {
         router.push('/cron-jobs/' + id);
+    };
+
+    const onSortChange = (newSort: SortOption<CronJob>) => {
+        handleSortChange(newSort.value as keyof CronJob);
     };
 
     if (isLoading) {
@@ -55,11 +67,12 @@ function CronJobs() {
                 <CronJobsHeader
                     searchTerm={searchTerm}
                     handleSearchChange={handleSearchChange}
-                    handleSortChange={handleSortChange}
+                    sortConfig={sortConfig}
+                    handleSortChange={onSortChange}
                     onCreateClick={() => router.push('/cron-jobs/create')}
                 />
                 <CronJobList jobs={paginatedJobs} onEditCronJob={onEditCronJob} />
-                { totalPages > 1 &&
+                {totalPages > 1 &&
                     <div className="mt-8 flex justify-center">
                         <PaginateComp
                             currentPage={currentPage}
