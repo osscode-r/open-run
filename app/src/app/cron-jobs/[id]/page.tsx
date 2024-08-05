@@ -2,9 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { CronJobData, JobStatus } from '../types';
-import { ArrowLeft } from 'lucide-react';
 import { CronJobForm } from '../components/CronJobForm';
 import DashboardLayout from '@/app/home/page';
 

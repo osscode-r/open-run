@@ -1,24 +1,23 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CronJob, JobStatus } from '../page';
+import { CronJob, JobStatus } from '../types';
 
 export type CronJobProps = {
     job: CronJob;
-    JobStatus: typeof JobStatus;
     onEditCronJob: (id: string) => void;
 };
 
-function CronJobCard({ job, JobStatus, onEditCronJob }: CronJobProps) {
+function CronJobCard({ job, onEditCronJob }: CronJobProps) {
     return (
-        <Card 
-            className='hover:bg-muted hover:cursor-pointer transition-colors duration-200' 
+        <Card
+            className='hover:bg-muted hover:cursor-pointer transition-colors duration-200'
             onClick={() => onEditCronJob(job.id)}
         >
             <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                     <span>{job.name}</span>
-                    <Badge 
+                    <Badge
                         className={job.tag === JobStatus.RUNNING ? 'bg-green-500' : 'bg-red-500'}
                     >
                         {job.tag}

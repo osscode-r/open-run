@@ -22,3 +22,15 @@ export const cronJobSchema = z.object({
 export type CronJobData = z.infer<typeof cronJobSchema>;
 
 export const yamlFields: (keyof CronJobData)[] = ['name', 'description', 'schedule', 'command', 'bashScript', 'isActive'];
+
+export interface CronJob {
+    id: string;
+    name: string;
+    description: string;
+    schedule: string;
+    command: string;
+    is_active: boolean;
+    last_run: string;
+    next_run: string;
+    tag: string;
+}
