@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,12 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { AceEditorComponent } from '../../../components/ui/CodeEditor';
-import { CronJobData, cronJobSchema, JobStatus } from '../types';
-import { filterJobDataForYaml } from '../hooks/filter-cron-job-fields';
+import { CronJob, CreateCronJobRequest, UpdateCronJobRequest, createCronJobRequestSchema, updateCronJobRequestSchema } from '../types';
 
 interface CronJobFormProps {
-    initialJob: Partial<CronJobData>;
-    onSubmit: (data: CronJobData) => void;
+    initialJob: Partial<CronJob | CreateCronJobRequest>;
+    onSubmit: (data: CreateCronJobRequest | UpdateCronJobRequest) => void;
     isNewJob: boolean;
 }
 
@@ -24,24 +21,23 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
     const [yamlContent, setYamlContent] = useState('');
     const [yamlError, setYamlError] = useState('');
 
-    const form = useForm<CronJobData>({
-        resolver: zodResolver(cronJobSchema),
+    const form = useForm<CreateCronJobRequest | UpdateCronJobRequest>({
+        resolver: zodResolver(isNewJob ? createCronJobRequestSchema : updateCronJobRequestSchema),
         defaultValues: initialJob,
     });
 
     const watchedData = form.watch();
 
     useEffect(() => {
-        const filteredData = filterJobDataForYaml(watchedData);
-        setYamlContent(yaml.dump(filteredData));
+        setYamlContent(yaml.dump(watchedData));
     }, [watchedData]);
 
     const handleYamlChange = (newValue: string) => {
         setYamlContent(newValue);
         try {
-            const parsed = yaml.load(newValue) as Partial<CronJobData>;
+            const parsed = yaml.load(newValue) as Partial<CreateCronJobRequest | UpdateCronJobRequest>;
             Object.entries(parsed).forEach(([key, value]) => {
-                form.setValue(key as keyof CronJobData, value as any);
+                form.setValue(key as any, value as any);
             });
             setYamlError('');
         } catch (e) {
@@ -53,14 +49,14 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
         <Form {...form}>
             <div className="mb-4 justify-between flex">
                 <h1 className='text-3xl font-bold mb-6 mt-2'>
-                    {isNewJob ? '' : `Edit Cron Job: ${initialJob.name}`}
+                    {isNewJob ? 'Create New Cron Job' : `Edit Cron Job: ${initialJob.name}`}
                 </h1>
                 <div>
                     <Button variant={'secondary'} size={'lg'} onClick={() => setYamlView(!yamlView)} className='mr-2'>
                         {yamlView ? 'Normal View' : 'Developer View'}
                     </Button>
                     <Button size={'lg'} onClick={form.handleSubmit(onSubmit)}>
-                        {initialJob.id ? 'Save' : 'Create'}
+                        {isNewJob ? 'Create' : 'Save'}
                     </Button>
                 </div>
             </div>
@@ -119,47 +115,41 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="isActive"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                        <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Active</FormLabel>
-                                            <FormDescription>
-                                                Toggle to activate or deactivate the cron job
-                                            </FormDescription>
-                                        </div>
-                                        <FormControl>
-                                            <Switch
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                            <div className='col-span-2 grid grid-cols-1 lg:grid-cols-2 space-y-5'>
-                                <div className='mt-5'>
-                                    <FormLabel>Status</FormLabel>
-                                    <p>{form.watch('status')}</p>
+                            {!isNewJob && (
+                                <FormField
+                                    control={form.control}
+                                    name="is_active"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Active</FormLabel>
+                                                <FormDescription>
+                                                    Toggle to activate or deactivate the cron job
+                                                </FormDescription>
+                                            </div>
+                                            <FormControl>
+                                                <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
+                            {!isNewJob && 'last_run_at' in initialJob && (
+                                <div className='col-span-2 grid grid-cols-1 lg:grid-cols-2 space-y-5'>
+                                    <div className='mt-5'>
+                                        <FormLabel>Last Run</FormLabel>
+                                        <p>{new Date(initialJob.last_run_at as string).toLocaleString()}</p>
+                                    </div>
                                 </div>
-
-                                <div className='mt-5'>
-                                    <FormLabel>Last Run</FormLabel>
-                                    <p>{new Date(form.watch('lastRun')).toLocaleString()}</p>
-                                </div>
-
-                                <div className='mt-5'>
-                                    <FormLabel>Next Run</FormLabel>
-                                    <p>{new Date(form.watch('nextRun')).toLocaleString()}</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
                         <div className="col-span-1 space-y-5">
                             <FormField
                                 control={form.control}
-                                name="bashScript"
+                                name="bash_script"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Bash Script</FormLabel>
@@ -190,7 +180,6 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                 )}
                             />
                         </div>
-
                     </div>
                 </form>
             )}
