@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import CronJobTemplatesSkeleton from './cron-job-templates-skeleton';
 
 const templates = [
     {
@@ -34,19 +35,27 @@ const templates = [
     },
 ];
 
-function CronJobTemplates() {
+interface CronJobTemplatesProps {
+    isLoading?: boolean;
+}
+
+function CronJobTemplates({ isLoading = false }: CronJobTemplatesProps) {
     const router = useRouter();
 
     const handleSelectTemplate = (templateId: string) => {
         router.push(`/cron-jobs/edit?template=${templateId}`);
     };
 
+    if (isLoading) {
+        return <CronJobTemplatesSkeleton />;
+    }
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mt-8">
             {templates.map((template) => (
                 <Card
-                    className=' hover:cursor-pointer transition-colors duration-200'
-                    onClick={() => { }}
+                    key={template.id}
+                    className='hover:cursor-pointer transition-colors duration-200'
                 >
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
@@ -61,7 +70,7 @@ function CronJobTemplates() {
                     </CardContent>
                     <CardFooter>
                         <Button
-                            variant={'outline'}
+                            variant='outline'
                             onClick={() => handleSelectTemplate(template.id)}
                         >
                             Use Template

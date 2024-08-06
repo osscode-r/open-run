@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AceEditorComponent } from '../../../components/ui/CodeEditor';
 import { CronJobData, cronJobSchema, JobStatus } from '../types';
 import { filterJobDataForYaml } from '../hooks/filter-cron-job-fields';
+import { useNavigation } from '@/lib/hook/use-navigation-hook';
 
 interface CronJobFormProps {
     initialJob: Partial<CronJobData>;
@@ -23,6 +24,9 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
     const [yamlView, setYamlView] = useState(false);
     const [yamlContent, setYamlContent] = useState('');
     const [yamlError, setYamlError] = useState('');
+
+    const { goBack } = useNavigation();
+
 
     const form = useForm<CronJobData>({
         resolver: zodResolver(cronJobSchema),
@@ -49,17 +53,23 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
         }
     };
 
+    const handleSubmit = async (data: CronJobData) => {
+        await onSubmit(data);
+        goBack();
+    };
+
+
     return (
         <Form {...form}>
-            <div className="mb-4 justify-between flex">
-                <h1 className='text-3xl font-bold mb-6 mt-2'>
+            <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <h1 className='text-2xl sm:text-3xl font-bold mb-2 sm:mb-0 mt-2'>
                     {isNewJob ? '' : `Edit Cron Job: ${initialJob.name}`}
                 </h1>
-                <div>
-                    <Button variant={'secondary'} size={'lg'} onClick={() => setYamlView(!yamlView)} className='mr-2'>
+                <div className="w-full sm:w-auto flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Button variant={'secondary'} size={'lg'} onClick={() => setYamlView(!yamlView)} className='w-full sm:w-auto'>
                         {yamlView ? 'Normal View' : 'Developer View'}
                     </Button>
-                    <Button size={'lg'} onClick={form.handleSubmit(onSubmit)}>
+                    <Button size={'lg'} onClick={form.handleSubmit(onSubmit)} className='w-full sm:w-auto'>
                         {initialJob.id ? 'Save' : 'Create'}
                     </Button>
                 </div>
@@ -72,11 +82,48 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                         value={yamlContent}
                         name="yaml-editor"
                     />
-                    {yamlError && <pre className="text-destructive whitespace-pre-wrap">{yamlError}</pre>}
+                    {yamlError && <pre className="text-destructive whitespace-pre-wrap text-sm">{yamlError}</pre>}
                 </div>
             ) : (
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="w-full pt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="bg-muted rounded-lg shadow-sm p-4 space-y-2">
+                                <FormField
+                                    control={form.control}
+                                    name="isActive"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-base font-semibold sm:text-lg w-full">Active</FormLabel>
+                                            <br />
+                                            <FormControl>
+                                                <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="bg-muted rounded-lg shadow-sm p-4 space-y-2">
+                                <FormLabel className="text-base font-semibold sm:text-lg">Status</FormLabel>
+                                <p className="text-md font-semibold">{form.watch('status')}</p>
+                            </div>
+
+                            <div className="bg-muted rounded-lg shadow-sm p-4 space-y-2">
+                                <FormLabel className="text-base font-semibold sm:text-lg">Last Run</FormLabel>
+                                <p className="text-md font-semibold">{new Date(form.watch('lastRun')).toLocaleString()}</p>
+                            </div>
+
+                            <div className="bg-muted rounded-lg shadow-sm p-4 space-y-2">
+                                <FormLabel className="text-base font-semibold sm:text-lg">Next Run</FormLabel>
+                                <p className="text-md font-semibold">{new Date(form.watch('nextRun')).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="col-span-1 space-y-5">
                             <FormField
                                 control={form.control}
@@ -119,42 +166,6 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="isActive"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                        <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Active</FormLabel>
-                                            <FormDescription>
-                                                Toggle to activate or deactivate the cron job
-                                            </FormDescription>
-                                        </div>
-                                        <FormControl>
-                                            <Switch
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                            <div className='col-span-2 grid grid-cols-1 lg:grid-cols-2 space-y-5'>
-                                <div className='mt-5'>
-                                    <FormLabel>Status</FormLabel>
-                                    <p>{form.watch('status')}</p>
-                                </div>
-
-                                <div className='mt-5'>
-                                    <FormLabel>Last Run</FormLabel>
-                                    <p>{new Date(form.watch('lastRun')).toLocaleString()}</p>
-                                </div>
-
-                                <div className='mt-5'>
-                                    <FormLabel>Next Run</FormLabel>
-                                    <p>{new Date(form.watch('nextRun')).toLocaleString()}</p>
-                                </div>
-                            </div>
                         </div>
                         <div className="col-span-1 space-y-5">
                             <FormField
@@ -183,14 +194,23 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     <FormItem>
                                         <FormLabel>Run Command</FormLabel>
                                         <FormControl>
-                                            <Textarea {...field} />
+                                            <div className="space-y-2">
+                                                <div className="tracking-tight text-white font-mono bg-secondary p-2 sm:p-4 rounded text-xs sm:text-sm text-left space-y-1 w-full overflow-x-auto">
+                                                    <div className="select-none text-neutral-400 font-bold pr-2 pb-4">
+                                                        # The self-hosted version is ready on your server in under a minute.
+                                                    </div>
+                                                    <div>
+                                                        <span className="select-none text-neutral-500 font-extrabold pr-2">&gt;</span>
+                                                        <span className="break-all">curl -fsSL https://cdn.coollabs.io/install.sh | bash</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
                         </div>
-
                     </div>
                 </form>
             )}
