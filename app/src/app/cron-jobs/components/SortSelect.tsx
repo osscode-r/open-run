@@ -20,7 +20,7 @@ export function SortSelect<T>({
     currentSort,
     onSortChange,
     placeholder = "Sort by",
-    className = "w-[180px]"
+    className = "w-full sm:w-[180px]"
 }: SortSelectProps<T>) {
     return (
         <Select

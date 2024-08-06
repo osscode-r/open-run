@@ -20,19 +20,20 @@ const sortOptions: SortOption<CronJob>[] = [
     { value: 'is_active', label: 'Status (Z-A)', direction: 'desc' },
 ];
 
-function CronJobsHeader({ 
-    searchTerm, 
-    handleSearchChange, 
+function CronJobsHeader({
+    searchTerm,
+    handleSearchChange,
     sortConfig,
-    handleSortChange, 
-    onCreateClick 
+    handleSortChange,
+    onCreateClick
 }: CronJobsHeaderProps) {
     return (
-        <div className='flex justify-between items-center'>
-            <div className='flex items-center my-10 space-x-4'>
-                <h1 className='text-3xl font-bold'>Cron Jobs</h1>
-                <SearchBar 
-                    searchTerm={searchTerm} 
+
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0'>
+            <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full'>
+                <h1 className='text-xl lg:text-3xl font-bold'>Cron Jobs</h1>
+                <SearchBar
+                    searchTerm={searchTerm}
                     handleSearchChange={handleSearchChange}
                     label="Search jobs..."
                 />
@@ -41,8 +42,8 @@ function CronJobsHeader({
                     currentSort={{
                         value: sortConfig.key,
                         direction: sortConfig.direction,
-                        label: sortOptions.find(option => 
-                            option.value === sortConfig.key && 
+                        label: sortOptions.find(option =>
+                            option.value === sortConfig.key &&
                             option.direction === sortConfig.direction
                         )?.label || ''
                     }}

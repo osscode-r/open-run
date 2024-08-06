@@ -1,14 +1,18 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import CronJobCardSkeleton from './cron-job-card-skeleton';
 import { CronJob } from '../types';
 
 export type CronJobProps = {
     job: CronJob;
     onEditCronJob: (id: string) => void;
+    isLoading?: boolean;
 };
 
-function CronJobCard({ job, onEditCronJob }: CronJobProps) {
+function CronJobCard({ job, onEditCronJob, isLoading = true }: CronJobProps) {
+    
+
     return (
         <Card
             className='hover:bg-muted hover:cursor-pointer transition-colors duration-200'

@@ -7,6 +7,7 @@ import { useSortableSearchableData } from './hooks/useSortableSearchData';
 import DashboardLayout from '../home/page';
 import CreateCronJob from './create/page';
 import { useGetAllCronJobsQuery } from '@/redux/services/cronJobsApi';
+import { useNavigation } from '@/lib/hook/use-navigation-hook';
 import { CronJob } from './types';
 import CronJobList from './components/CronJobsList';
 import CronJobsHeader from './components/CronJobsHeader';
@@ -18,6 +19,7 @@ function CronJobs() {
     const [currentPage, setCurrentPage] = useState(1);
     const router = useRouter();
     const { data: allJobs, isLoading } = useGetAllCronJobsQuery({});
+    const { navigateToCreateCronJob, navigateToEditCronJob } = useNavigation();
 
     const {
         filteredAndSortedData: filteredAndSortedJobs,
@@ -53,17 +55,13 @@ function CronJobs() {
         handleSortChange(newSort.value as keyof CronJob);
     };
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
     if ((paginatedJobs || []).length === 0) {
         return <CreateCronJob />;
     }
 
     return (
         <DashboardLayout>
-            <div className='flex flex-col'>
+            <div className='flex flex-col p-4 sm:p-6 md:p-8'>
                 <CronJobsHeader
                     searchTerm={searchTerm}
                     handleSearchChange={handleSearchChange}
@@ -71,7 +69,7 @@ function CronJobs() {
                     handleSortChange={onSortChange}
                     onCreateClick={() => router.push('/cron-jobs/create')}
                 />
-                <CronJobList jobs={paginatedJobs} onEditCronJob={onEditCronJob} />
+                <CronJobList jobs={paginatedJobs} isLoading={isLoading} onEditCronJob={onEditCronJob} />
                 {totalPages > 1 &&
                     <div className="mt-8 flex justify-center">
                         <PaginateComp

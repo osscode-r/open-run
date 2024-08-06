@@ -47,15 +47,16 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
 
     return (
         <Form {...form}>
-            <div className="mb-4 justify-between flex">
-                <h1 className='text-3xl font-bold mb-6 mt-2'>
-                    {isNewJob ? 'Create New Cron Job' : `Edit Cron Job: ${initialJob.name}`}
+
+            <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <h1 className='text-2xl sm:text-3xl font-bold mb-2 sm:mb-0 mt-2'>
+                    {isNewJob ? 'Create New Cron Job' : `Edit Cron Job : ${initialJob.name}`}
                 </h1>
-                <div>
-                    <Button variant={'secondary'} size={'lg'} onClick={() => setYamlView(!yamlView)} className='mr-2'>
+                <div className="w-full sm:w-auto flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Button variant={'secondary'} size={'lg'} onClick={() => setYamlView(!yamlView)} className='w-full sm:w-auto'>
                         {yamlView ? 'Normal View' : 'Developer View'}
                     </Button>
-                    <Button size={'lg'} onClick={form.handleSubmit(onSubmit)}>
+                    <Button size={'lg'} onClick={form.handleSubmit(onSubmit)} className='w-full sm:w-auto'>
                         {isNewJob ? 'Create' : 'Save'}
                     </Button>
                 </div>
@@ -82,20 +83,6 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                         <FormLabel>Name</FormLabel>
                                         <FormControl>
                                             <Input {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="description"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Description</FormLabel>
-                                        <FormControl>
-                                            <Textarea {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -149,37 +136,56 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                         <div className="col-span-1 space-y-5">
                             <FormField
                                 control={form.control}
-                                name="bash_script"
+                                name="description"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Bash Script</FormLabel>
+                                        <FormLabel>Description</FormLabel>
                                         <FormControl>
-                                            <AceEditorComponent
-                                                mode="sh"
-                                                onChange={field.onChange}
-                                                value={field.value || ''}
-                                                name="bash-editor"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="command"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Run Command</FormLabel>
-                                        <FormControl>
-                                            <Textarea {...field} />
+                                            <Textarea rows={6} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
                         </div>
+                    </div>
+                    <div className='w-full space-y-5'>
+                        <FormField
+                            control={form.control}
+                            name="command"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Run Command</FormLabel>
+                                    <FormControl>
+                                        <div className="flex items-center rounded-md">
+                                            <span className="bg-transparent  px-2 py-1">$</span>
+                                            <Input {...field} className="flex-1 border-none" />
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+
+                        <FormField
+                            control={form.control}
+                            name="bash_script"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Bash Script</FormLabel>
+                                    <FormControl>
+                                        <AceEditorComponent
+                                            mode="sh"
+                                            onChange={field.onChange}
+                                            value={field.value || ''}
+                                            name="bash-editor"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
                 </form>
             )}

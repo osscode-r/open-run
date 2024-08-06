@@ -35,36 +35,16 @@ const DashboardLayout = ({ children }: React.PropsWithChildren) => {
     }
 
     const breadcrumbs = getBreadcrumbs()
-    if(!isAuthenticated) {
-        router.push('/login')
-        return <div className="flex h-screen w-full items-center justify-center">Please login to continue</div>
-    }
+    // if(!isAuthenticated) {
+    //     router.push('/login')
+    //     return <div className="flex h-screen w-full items-center justify-center">Please login to continue</div>
+    // }
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <Sidebar />
             <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
                 <Header />
-                <div className="px-4 sm:px-6">
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            {breadcrumbs.map((crumb, index) => (
-                                <React.Fragment key={crumb.href}>
-                                    <BreadcrumbItem>
-                                        {index === breadcrumbs.length - 1 ? (
-                                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                                        ) : (
-                                            <BreadcrumbLink asChild>
-                                                <Link href={crumb.href}>{crumb.label}</Link>
-                                            </BreadcrumbLink>
-                                        )}
-                                    </BreadcrumbItem>
-                                    {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                                </React.Fragment>
-                            ))}
-                        </BreadcrumbList>
-                    </Breadcrumb>
-                </div>
-                <main className="flex-1 p-4 sm:px-6 sm:py-0 container">
+                <main className="flex-1 p-4 sm:px-6 sm:py-10 container">
                     {children}
                 </main>
             </div>
