@@ -1,38 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CronJobTemplatesSkeleton from './cron-job-templates-skeleton';
+import { getAllTemplates } from '../hooks/cron-templates';
+import PaginateComp from '@/components/paginate';
+import { useSortableSearchableData } from '../hooks/useSortableSearchData';
+import { CronTemplate } from '../types';
+import { SearchBar } from './SearchBar';
+import { TemplateGrid } from './CronTemplates';
+import { SortOption, SortSelect } from './SortSelect';
 
-const templates = [
-    {
-        id: 'daily-backup',
-        name: 'Daily Backup',
-        description: 'Perform a daily backup at midnight',
-        schedule: '0 0 * * *',
-        command: 'backup.sh',
-    },
-    {
-        id: 'weekly-report',
-        name: 'Weekly Report',
-        description: 'Generate a weekly report every Monday at 8 AM',
-        schedule: '0 8 * * 1',
-        command: 'generate_report.sh',
-    },
-    {
-        id: 'monthly-report',
-        name: 'Monthly Report',
-        description: 'Generate a monthly report every first day of the month at 8 AM',
-        schedule: '0 8 1 * *',
-        command: 'generate_report.sh',
-    },
-    {
-        id: 'yearly-report',
-        name: 'Yearly Report',
-        description: 'Generate a yearly report every first day of the year at 8 AM',
-        schedule: '0 8 1 1 *',
-        command: 'generate_report.sh',
-    },
+const sortOptions: SortOption<CronTemplate>[] = [
+    { value: 'name', label: 'Name (A-Z)', direction: 'asc' },
+    { value: 'name', label: 'Name (Z-A)', direction: 'desc' },
+    { value: 'schedule', label: 'Schedule (A-Z)', direction: 'asc' },
+    { value: 'schedule', label: 'Schedule (Z-A)', direction: 'desc' },
 ];
 
 interface CronJobTemplatesProps {
@@ -40,10 +23,45 @@ interface CronJobTemplatesProps {
 }
 
 function CronJobTemplates({ isLoading = false }: CronJobTemplatesProps) {
-    const router = useRouter();
+const ITEMS_PER_PAGE = 8;
 
-    const handleSelectTemplate = (templateId: string) => {
-        router.push(`/cron-jobs/edit?template=${templateId}`);
+function CronJobTemplates() {
+    const router = useRouter();
+    const templates = getAllTemplates();
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const {
+        filteredAndSortedData,
+        searchTerm,
+        handleSearchChange,
+        handleSortChange,
+        sortConfig,
+    } = useSortableSearchableData < CronTemplate > (
+        templates,
+        ['name', 'description', 'schedule'],
+        { key: 'name', direction: 'asc' }
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, sortConfig]);
+
+    const handleSelectTemplate = (templateName: string) => {
+        router.push(`/cron-jobs/edit?template=${encodeURIComponent(templateName)}`);
+    };
+
+    const totalPages = Math.ceil(filteredAndSortedData.length / ITEMS_PER_PAGE);
+    const paginatedTemplates = filteredAndSortedData.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePageChange = (pageNumber: number) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const onSortChange = (newSort: SortOption<CronTemplate>) => {
+        handleSortChange(newSort.value as keyof CronTemplate);
     };
 
     if (isLoading) {
@@ -51,34 +69,41 @@ function CronJobTemplates({ isLoading = false }: CronJobTemplatesProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mt-8">
-            {templates.map((template) => (
-                <Card
-                    key={template.id}
-                    className='hover:cursor-pointer transition-colors duration-200'
-                >
-                    <CardHeader>
-                        <CardTitle className="flex justify-between items-center">
-                            <span>{template.name}</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            <p className='text-sm text-muted-foreground truncate'>{template.description}</p>
-                            <p className='text-sm text-muted-foreground'>Schedule: {template.schedule}</p>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Button
-                            variant='outline'
-                            onClick={() => handleSelectTemplate(template.id)}
-                        >
-                            Use Template
-                        </Button>
-                    </CardFooter>
-                </Card>
-            ))}
-        </div>
+        <>
+            <div className="relative mt-10 flex items-center space-x-4">
+                <SearchBar
+                    searchTerm={searchTerm}
+                    handleSearchChange={handleSearchChange}
+                    label="Search Cron Job templates..."
+                />
+                <SortSelect<CronTemplate>
+                    options={sortOptions}
+                    currentSort={{
+                        value: sortConfig.key,
+                        direction: sortConfig.direction,
+                        label: sortOptions.find(option =>
+                            option.value === sortConfig.key &&
+                            option.direction === sortConfig.direction
+                        )?.label || ''
+                    }}
+                    onSortChange={onSortChange}
+                    placeholder="Sort templates"
+                />
+            </div>
+            <TemplateGrid
+                templates={paginatedTemplates}
+                handleSelectTemplate={handleSelectTemplate}
+            />
+            {totalPages > 1 && (
+                <div className="flex justify-center mt-10">
+                    <PaginateComp
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+            )}
+        </>
     );
 }
 

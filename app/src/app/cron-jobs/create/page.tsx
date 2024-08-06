@@ -4,21 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import CronJobTemplates from '../components/CronJobTemplates';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { CronJobData, JobStatus } from '../types';
+import { emptyJob } from '../types';
 import { CronJobForm } from '../components/CronJobForm';
 import DashboardLayout from '@/app/home/page';
-
-const emptyJob: Partial<CronJobData> = {
-    name: '',
-    description: '',
-    schedule: '',
-    command: '',
-    bashScript: '',
-    isActive: true,
-    lastRun: new Date().toISOString(),
-    nextRun: new Date().toISOString(),
-    status: JobStatus.STOPPED,
-};
+import { useGetAllCronJobsQuery, useCreateCronJobMutation } from '@/redux/services/cronJobsApi';
+import { CreateCronJobRequest, UpdateCronJobRequest } from '../types';
+import { useRouter } from 'next/navigation';
 
 function CreateCronJob() {
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
@@ -31,9 +22,27 @@ function CreateCronJob() {
         return () => clearTimeout(timer);
     }, []);
 
-    const handleSubmit = (job: CronJobData) => {
-        console.log('Submitting job:', job);
+    const [createCronJob, { isLoading: isCreating }] = useCreateCronJobMutation();
+    const { data: allJobs, isLoading: isLoadingJobs, refetch: refetchJobs } = useGetAllCronJobsQuery({});
+    const router = useRouter();
+
+    const onSubmit = async (data: CreateCronJobRequest | UpdateCronJobRequest) => {
+        console.log('Saving job data:', data);
+        try {
+            const newJobData: CreateCronJobRequest = {
+                ...data,
+            };
+            await createCronJob(newJobData).unwrap();
+            refetchJobs();
+            router.push('/cron-jobs');
+        } catch (error) {
+            console.error('Error saving job:', error);
+        }
     };
+
+    if (isLoadingJobs || isCreating) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <DashboardLayout>
@@ -53,13 +62,13 @@ function CreateCronJob() {
                                 <CronJobTemplates isLoading={isLoadingTemplates} />
                             </TabsContent>
                             <TabsContent value="custom">
-                                <CronJobForm initialJob={emptyJob} onSubmit={handleSubmit} isNewJob />
-                            </TabsContent>
-                        </Tabs>
-                    </CardContent>
-                </Card>
-            </div>
-        </DashboardLayout>
+                                <CronJobForm initialJob={emptyJob} onSubmit={onSubmit} isNewJob />
+                            </TabsContent >
+                        </Tabs >
+                    </CardContent >
+                </Card >
+            </div >
+        </DashboardLayout >
     );
 }
 

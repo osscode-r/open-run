@@ -1,24 +1,75 @@
 import { z } from 'zod';
 
-export enum JobStatus {
-    RUNNING = 'Running',
-    STOPPED = 'Stopped',
-    FAILED = 'Failed',
-}
-
 export const cronJobSchema = z.object({
-    id: z.string(),
-    name: z.string().min(1, "Name is required"),
-    description: z.string(),
-    schedule: z.string().regex(/^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\s*)((\*|(?:[0-9]|1[0-9]|2[0-3]))\s*)((\*|(?:[1-9]|1[0-9]|2[0-9]|3[0-1]))\s*)((\*|(?:[1-9]|1[0-2]))\s*)((\*|(?:[0-6]))\s*)$/, "Invalid cron schedule"),
-    command: z.string().min(1, "Command is required"),
-    bashScript: z.string().optional(),
-    isActive: z.boolean(),
-    lastRun: z.string(),
-    nextRun: z.string(),
-    status: z.nativeEnum(JobStatus),
+    id: z.string().uuid(),
+    schedule: z.string(),
+    command: z.string(),
+    description: z.string().optional(),
+    name: z.string(),
+    bash_script: z.string().optional(),
+    user_id: z.string().uuid(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+    is_active: z.boolean(),
+    last_run_at: z.string().datetime().optional(),
 });
 
-export type CronJobData = z.infer<typeof cronJobSchema>;
+export type CronJob = z.infer<typeof cronJobSchema>;
 
-export const yamlFields: (keyof CronJobData)[] = ['name', 'description', 'schedule', 'command', 'bashScript', 'isActive'];
+export const createCronJobRequestSchema = z.object({
+    schedule: z.string(),
+    command: z.string(),
+    description: z.string().optional(),
+    name: z.string(),
+    bash_script: z.string().optional(),
+});
+
+export type CreateCronJobRequest = z.infer<typeof createCronJobRequestSchema>;
+
+export const updateCronJobRequestSchema = z.object({
+    schedule: z.string(),
+    command: z.string(),
+    description: z.string().optional(),
+    name: z.string(),
+    bash_script: z.string().optional(),
+    is_active: z.boolean(),
+    id: z.string().optional(),
+});
+
+export type UpdateCronJobRequest = z.infer<typeof updateCronJobRequestSchema>;
+
+export const cronJobResponseSchema = z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: cronJobSchema.optional(),
+});
+
+export type CronJobResponse = z.infer<typeof cronJobResponseSchema>;
+
+export const cronJobListResponseSchema = z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(cronJobSchema).optional(),
+});
+
+export type CronJobListResponse = z.infer<typeof cronJobListResponseSchema>;
+
+export const yamlFields: (keyof CronJob)[] = ['name', 'description', 'schedule', 'command', 'bash_script', 'is_active'];
+
+export interface CronTemplate {
+    name: string;
+    description?: string;
+    schedule: string;
+    command: string;
+    bash_script?: string;
+}
+
+export const emptyJob: Partial<CronJob> = {
+    name: '',
+    description: '',
+    schedule: '',
+    command: '',
+    bash_script: '',
+    is_active: true,
+    last_run_at: ""
+};
