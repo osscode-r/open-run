@@ -44,27 +44,7 @@ const DashboardLayout = ({ children }: React.PropsWithChildren) => {
             <Sidebar />
             <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
                 <Header />
-                <div className="px-4 sm:px-6">
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            {breadcrumbs.map((crumb, index) => (
-                                <React.Fragment key={crumb.href}>
-                                    <BreadcrumbItem>
-                                        {index === breadcrumbs.length - 1 ? (
-                                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                                        ) : (
-                                            <BreadcrumbLink asChild>
-                                                <Link href={crumb.href}>{crumb.label}</Link>
-                                            </BreadcrumbLink>
-                                        )}
-                                    </BreadcrumbItem>
-                                    {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                                </React.Fragment>
-                            ))}
-                        </BreadcrumbList>
-                    </Breadcrumb>
-                </div>
-                <main className="flex-1 p-4 sm:px-6 sm:py-0 container">
+                <main className="flex-1 p-4 sm:px-6 sm:py-10 container">
                     {children}
                 </main>
             </div>

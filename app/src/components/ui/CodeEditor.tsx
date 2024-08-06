@@ -6,7 +6,7 @@ const AceEditor = dynamic(
         const ace = await import('react-ace');
         await import('ace-builds/src-noconflict/mode-yaml');
         await import('ace-builds/src-noconflict/mode-sh');
-        await import('ace-builds/src-noconflict/theme-monokai');
+        await import('ace-builds/src-noconflict/theme-terminal');
         return ace;
     },
     { ssr: false }
@@ -23,7 +23,7 @@ interface AceEditorProps {
 export const AceEditorComponent: React.FC<AceEditorProps> = ({ mode, value, onChange, name }) => (
     <AceEditor
         mode={mode}
-        theme="monokai"
+        theme="terminal"
         onChange={onChange}
         value={value}
         name={name}

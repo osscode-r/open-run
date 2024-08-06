@@ -26,6 +26,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ModeToggle } from '@/components/ui/mode-toggle'
 import { useAuth } from '@/app/login/hooks/useAuth'
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { usePathname, useRouter } from 'next/navigation'
 
 interface MobileNavItemProps {
     href: string;
@@ -33,6 +42,10 @@ interface MobileNavItemProps {
     label: string;
 }
 
+interface BreadcrumbItem {
+    href: string;
+    label: string;
+}
 const MobileNavItem: React.FC<MobileNavItemProps> = ({ href, icon: Icon, label }) => (
     <Link
         href={href}
@@ -45,13 +58,27 @@ const MobileNavItem: React.FC<MobileNavItemProps> = ({ href, icon: Icon, label }
 
 
 const Header = () => {
+    const pathname = usePathname()
+    const router = useRouter()
+    const { isAuthenticated } = useAuth();
+    const getBreadcrumbs = (): BreadcrumbItem[] => {
+        const asPathNestedRoutes = pathname.split("/").filter(v => v.length > 0)
+
+        const crumblist = asPathNestedRoutes.map((subpath, idx) => {
+            const href = "/" + asPathNestedRoutes.slice(0, idx + 1).join("/")
+            return { href, label: subpath.charAt(0).toUpperCase() + subpath.slice(1) }
+        })
+
+        return [{ href: "/home", label: "Dashboard" }, ...crumblist]
+    }
+    const breadcrumbs = getBreadcrumbs()
     const { logout } = useAuth();
 
     return (
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button size="icon" variant="outline" className="sm:hidden">
+                    <Button size="icon" variant="outline">
                         <PanelLeft className="h-5 w-5" />
                         <span className="sr-only">Toggle Menu</span>
                     </Button>
@@ -73,7 +100,28 @@ const Header = () => {
                     </nav>
                 </SheetContent>
             </Sheet>
+            <div>
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        {breadcrumbs.map((crumb, index) => (
+                            <React.Fragment key={crumb.href}>
+                                <BreadcrumbItem>
+                                    {index === breadcrumbs.length - 1 ? (
+                                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                                    ) : (
+                                        <BreadcrumbLink asChild>
+                                            <Link href={crumb.href}>{crumb.label}</Link>
+                                        </BreadcrumbLink>
+                                    )}
+                                </BreadcrumbItem>
+                                {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                            </React.Fragment>
+                        ))}
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
             <div className="relative ml-auto flex-1 md:grow-0">
+
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                     type="search"

@@ -10,10 +10,8 @@ export type CronJobProps = {
     isLoading?: boolean;
 };
 
-function CronJobCard({ job, JobStatus, onEditCronJob, isLoading = false }: CronJobProps) {
-    if (isLoading || !job) {
-        return <CronJobCardSkeleton />;
-    }
+function CronJobCard({ job, onEditCronJob, isLoading = true }: CronJobProps) {
+    
 
     return (
         <Card

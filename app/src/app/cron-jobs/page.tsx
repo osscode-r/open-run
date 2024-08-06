@@ -55,17 +55,13 @@ function CronJobs() {
         handleSortChange(newSort.value as keyof CronJob);
     };
 
-    if (isLoading) {
-        return <div className="flex justify-center items-center h-screen">Loading...</div>;
-    }
-
     if ((paginatedJobs || []).length === 0) {
         return <CreateCronJob />;
     }
 
     return (
         <DashboardLayout>
-            <div className='flex flex-col'>
+            <div className='flex flex-col p-4 sm:p-6 md:p-8'>
                 <CronJobsHeader
                     searchTerm={searchTerm}
                     handleSearchChange={handleSearchChange}
@@ -73,7 +69,7 @@ function CronJobs() {
                     handleSortChange={onSortChange}
                     onCreateClick={() => router.push('/cron-jobs/create')}
                 />
-                <CronJobList jobs={paginatedJobs} onEditCronJob={onEditCronJob} />
+                <CronJobList jobs={paginatedJobs} isLoading={isLoading} onEditCronJob={onEditCronJob} />
                 {totalPages > 1 &&
                     <div className="mt-8 flex justify-center">
                         <PaginateComp

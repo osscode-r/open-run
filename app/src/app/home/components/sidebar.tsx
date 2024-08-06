@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React from 'react'
+import Link from "next/link"
 import {
     Package2,
     Home,
@@ -9,67 +9,55 @@ import {
     Folder,
     Server,
     Package,
-} from 'lucide-react';
+} from "lucide-react"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+    TooltipProvider
+} from "@/components/ui/tooltip"
 
-interface NavItemProps {
-    href: string;
-    icon: LucideIcon;
-    label: string;
-    expanded: boolean;
-}
+const NavItem = ({ href, icon: Icon, label }: { href: string, icon: LucideIcon, label: string }) => (
+    <Tooltip>
+        <TooltipTrigger asChild>
+            <Link
+                href={href}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+            >
+                <Icon className="h-5 w-5" />
+                <span className="sr-only">{label}</span>
+            </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+)
 
-const NavItem: React.FC<NavItemProps> = ({ href, icon: Icon, label, expanded }) => (
-    <Link
-        href={href}
-        className={`flex h-10 items-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground ${expanded ? 'px-3 w-full' : 'w-10 justify-center'
-            }`}
-    >
-        <Icon className="h-5 w-5 flex-shrink-0" />
-        <span
-            className={`ml-3 overflow-hidden transition-all duration-200 ${expanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
-                }`}
-        >
-            {label}
-        </span>
-    </Link>
-);
-
-const Sidebar: React.FC = () => {
-    const [expanded, setExpanded] = useState(false);
-
+const Sidebar = () => {
     return (
-        <aside
-            className={`fixed inset-y-0 left-0 z-10 flex flex-col border-r bg-background transition-all duration-300 ease-in-out ${expanded ? 'w-60' : 'w-14'
-                }`}
-            onMouseEnter={() => setExpanded(true)}
-            onMouseLeave={() => setExpanded(false)}
-        >
-            <div className="flex h-14 items-center justify-center px-3 py-2">
+        <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+            <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
                 <Link
                     href="#"
-                    className="flex h-10 items-center gap-2 rounded-lg bg-primary px-3 text-primary-foreground"
+                    className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
                 >
-                    <Package2 className="h-5 w-5 flex-shrink-0" />
-                    <span
-                        className={`overflow-hidden transition-all duration-200 ${expanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
-                            }`}
-                    >
-                        Acme Inc
-                    </span>
+                    <Package2 className="h-4 w-4 transition-all group-hover:scale-110" />
+                    <span className="sr-only">Acme Inc</span>
                 </Link>
-            </div>
-            <nav className="flex flex-col gap-1 px-2 py-4">
-                <NavItem href="/home" icon={Home} label="Dashboard" expanded={expanded} />
-                <NavItem href="/cron-jobs" icon={Clock} label="Cron Jobs" expanded={expanded} />
-                <NavItem href="/general" icon={Package} label="General" expanded={expanded} />
-                <NavItem href="/file-manager" icon={Folder} label="File Manager" expanded={expanded} />
-                <NavItem href="/load-balancers" icon={Server} label="Load Balancers" expanded={expanded} />
+                <TooltipProvider>
+                    <NavItem href="/home" icon={Home} label="Dashboard" />
+                    <NavItem href="/cron-jobs" icon={Clock} label="Cron Jobs" />
+                    <NavItem href="/general" icon={Package} label="General" />
+                    <NavItem href="/file-manager" icon={Folder} label="File Manager" />
+                    <NavItem href="/load-balancers" icon={Server} label="Load Balancers" />
+                </TooltipProvider>
             </nav>
-            <nav className="mt-auto flex flex-col gap-1 px-2 py-4">
-                <NavItem href="#" icon={Settings} label="Settings" expanded={expanded} />
+            <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+                <TooltipProvider>
+                    <NavItem href="#" icon={Settings} label="Settings" />
+                </TooltipProvider>
             </nav>
         </aside>
-    );
-};
+    )
+}
 
-export default Sidebar;
+export default Sidebar

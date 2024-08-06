@@ -40,19 +40,15 @@ function CreateCronJob() {
         }
     };
 
-    if (isLoadingJobs || isCreating) {
-        return <div>Loading...</div>;
-    }
-
     return (
         <DashboardLayout>
             <div className='mx-0'>
-                <Card className='border-0 bg-inherit'>
-                    <CardHeader>
-                        <CardTitle>Create a New Cron Job</CardTitle>
-                        <CardDescription>Select a template or create a custom cron job</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                <div className='border-0 bg-inherit space-y-4'>
+                    <div className='w-full'>
+                        <h1 className='text-xl lg:text-3xl font-bold'>Create a New Cron Job</h1>
+                        <p className='text-sm text-muted-foreground'>Select a template or create a custom cron job</p>
+                    </div>
+                    <div className='w-full'>
                         <Tabs defaultValue="template">
                             <TabsList className="grid w-fit grid-cols-2">
                                 <TabsTrigger value="template">Use Template</TabsTrigger>
@@ -65,8 +61,8 @@ function CreateCronJob() {
                                 <CronJobForm initialJob={emptyJob} onSubmit={onSubmit} isNewJob />
                             </TabsContent >
                         </Tabs >
-                    </CardContent >
-                </Card >
+                    </div >
+                </div >
             </div >
         </DashboardLayout >
     );

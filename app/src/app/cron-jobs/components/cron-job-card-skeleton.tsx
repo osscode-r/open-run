@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 function CronJobCardSkeleton() {
   return (
     <Card className="hover:bg-muted transition-colors duration-200">
-      <CardHeader className="flex justify-between items-center">
+      <CardHeader className="flex justify-between items-start">
         <Skeleton className="h-5 w-1/2" />
         <Skeleton className="h-5 w-16" />
       </CardHeader>
