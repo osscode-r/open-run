@@ -25,7 +25,6 @@ uuid = { version = "1.3", features = ["v4", "serde"] }
 bcrypt = "0.15.1"
 jsonwebtoken = "9.3.0"
 anyhow = "1.0"
-cron = "0.12.1"
 actix-http = "3.0.0-beta.4"
 actix-cors = "0.7.0"
 

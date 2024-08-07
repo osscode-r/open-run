@@ -1,3 +1,4 @@
+import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 
 export const cronJobSchema = z.object({
@@ -73,3 +74,9 @@ export const emptyJob: Partial<CronJob> = {
     is_active: true,
     last_run_at: ""
 };
+
+export type CronJobFormValues = CreateCronJobRequest | UpdateCronJobRequest;
+
+export interface CronExpressionInputProps {
+    form: UseFormReturn<CronJobFormValues, any, undefined>;
+}

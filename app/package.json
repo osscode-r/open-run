@@ -43,6 +43,7 @@
     "cmdk": "^1.0.0",
     "cookies-next": "^4.2.1",
     "country-state-city": "^3.2.1",
+    "cron-parser": "^4.9.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.1.6",
     "hls.js": "^1.5.11",

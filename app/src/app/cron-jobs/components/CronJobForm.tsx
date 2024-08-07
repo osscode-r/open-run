@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { AceEditorComponent } from '../../../components/ui/CodeEditor';
-import { CronJob, CreateCronJobRequest, UpdateCronJobRequest, createCronJobRequestSchema, updateCronJobRequestSchema } from '../types';
+import { CronJob, CreateCronJobRequest, UpdateCronJobRequest, createCronJobRequestSchema, updateCronJobRequestSchema, CronJobFormValues } from '../types';
+import { CronExpressionInput } from '../../../components/ui/CronInput';
 
 interface CronJobFormProps {
     initialJob: Partial<CronJob | CreateCronJobRequest>;
@@ -21,7 +22,7 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
     const [yamlContent, setYamlContent] = useState('');
     const [yamlError, setYamlError] = useState('');
 
-    const form = useForm<CreateCronJobRequest | UpdateCronJobRequest>({
+    const form = useForm<CronJobFormValues>({
         resolver: zodResolver(isNewJob ? createCronJobRequestSchema : updateCronJobRequestSchema),
         defaultValues: initialJob,
     });
@@ -35,9 +36,9 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
     const handleYamlChange = (newValue: string) => {
         setYamlContent(newValue);
         try {
-            const parsed = yaml.load(newValue) as Partial<CreateCronJobRequest | UpdateCronJobRequest>;
+            const parsed = yaml.load(newValue) as Partial<CronJobFormValues>;
             Object.entries(parsed).forEach(([key, value]) => {
-                form.setValue(key as any, value as any);
+                form.setValue(key as keyof CronJobFormValues, value as any);
             });
             setYamlError('');
         } catch (e) {
@@ -47,7 +48,6 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
 
     return (
         <Form {...form}>
-
             <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                 <h1 className='text-2xl sm:text-3xl font-bold mb-2 sm:mb-0 mt-2'>
                     {isNewJob ? 'Create New Cron Job' : `Edit Cron Job : ${initialJob.name}`}
@@ -88,20 +88,7 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     </FormItem>
                                 )}
                             />
-
-                            <FormField
-                                control={form.control}
-                                name="schedule"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Schedule (Cron Expression)</FormLabel>
-                                        <FormControl>
-                                            <Input {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <CronExpressionInput form={form} />
                             {!isNewJob && (
                                 <FormField
                                     control={form.control}
@@ -158,7 +145,7 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     <FormLabel>Run Command</FormLabel>
                                     <FormControl>
                                         <div className="flex items-center rounded-md">
-                                            <span className="bg-transparent  px-2 py-1">$</span>
+                                            <span className="bg-transparent px-2 py-1">$</span>
                                             <Input {...field} className="flex-1 border-none" />
                                         </div>
                                     </FormControl>
@@ -166,7 +153,6 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                 </FormItem>
                             )}
                         />
-
 
                         <FormField
                             control={form.control}
