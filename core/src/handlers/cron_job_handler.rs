@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
-use crate::models::cron_job::{CreateCronJobRequest, UpdateCronJobRequest, CronJobResponse, CronJobListResponse};
+use crate::models::cron_job::{CreateCronJobRequest, CronJobListResponse, CronJobLogResponse, CronJobResponse, UpdateCronJobRequest};
 use crate::services::cron_job_service;
 use crate::{AppState, TokenClaims};
 use uuid::Uuid;
@@ -102,6 +102,27 @@ pub async fn delete_cron_job(
         Err(e) => HttpResponse::InternalServerError().json(CronJobResponse {
             success: false,
             message: format!("Failed to delete cron job: {}", e),
+            data: None
+        })
+    }
+}
+
+pub async fn get_cron_job_log_by_id(
+    data: web::Data<AppState>,
+    path: web::Path<Uuid>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let user_id = claims.sub;
+    let id = path.into_inner();
+    match cron_job_service::get_job_status(&data.db, id, user_id).await {
+        Ok(log) => HttpResponse::Ok().json(CronJobLogResponse {
+            success: true,
+            message: "Cron job log retrieved successfully".to_string(),
+            data: Some(log.1),
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(CronJobLogResponse {
+            success: false,
+            message: format!("Failed to get cron job log: {}", e),
             data: None
         })
     }

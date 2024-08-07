@@ -54,3 +54,10 @@ pub struct CronJobListResponse {
     pub message: String,
     pub data: Option<Vec<CronJob>>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CronJobLogResponse {
+    pub success: bool,
+    pub message: String,
+    pub data: Option<String>,
+}

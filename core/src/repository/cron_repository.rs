@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::models::cron_job::{CronJob, CreateCronJobRequest, UpdateCronJobRequest};
-use crate::services::cron_job_service::get_last_run_time;
+use crate::services::cron_job_service::{get_job_status, get_last_run_time};
 
 pub async fn create_cron_job(pool: &PgPool, job: CreateCronJobRequest, user_id: Uuid) -> Result<CronJob, sqlx::Error> {
     let row = sqlx::query!(

@@ -3,10 +3,8 @@ use log::error;
 use sqlx::PgPool;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use cron::Schedule;
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::str::FromStr;
 use std::process::Command;
 use crate::models::cron_job::{CronJob, CreateCronJobRequest, UpdateCronJobRequest};
 use crate::repository::cron_repository;
@@ -19,11 +17,6 @@ pub async fn create_cron_job(pool: &PgPool, mut job: CreateCronJobRequest, user_
     job.schedule = job.schedule.trim().replace(['\'', '"'], "");
     
     info!("Attempting to create cron job with schedule: {}", job.schedule);
-
-    if let Err(e) = Schedule::from_str(&job.schedule) {
-        error!("Invalid cron expression '{}': {}", job.schedule, e);
-        return Err(format!("Invalid cron expression: {}", e).into());
-    }
 
     info!("Cron schedule '{}' is valid", job.schedule);
 
@@ -40,7 +33,6 @@ pub async fn create_cron_job(pool: &PgPool, mut job: CreateCronJobRequest, user_
     Ok(cron_job)
 }
 
-
 pub async fn list_cron_jobs(pool: &PgPool, user_id: Uuid) -> Result<Vec<CronJob>, sqlx::Error> {
     cron_repository::list_cron_jobs(pool, user_id).await
 }
@@ -50,8 +42,6 @@ pub async fn get_cron_job_by_id(pool: &PgPool, id: Uuid, user_id: Uuid) -> Resul
 }
 
 pub async fn update_cron_job(pool: &PgPool, id: Uuid, job: UpdateCronJobRequest, user_id: Uuid) -> Result<CronJob, Box<dyn std::error::Error>> {
-    let _schedule = Schedule::from_str(&job.schedule)?;
-
     let updated_job = cron_repository::update_cron_job(pool, id, job, user_id).await?;
     let log_file_path = format!("{}/{}.log", LOG_DIR, updated_job.id);
     File::create(&log_file_path)?;
@@ -82,29 +72,11 @@ fn add_to_crontab(job: &CronJob, log_file_path: &str) -> Result<(), Box<dyn std:
             .open(log_file_path)?;
         writeln!(file, "Log file created for Job ID: {}", job.id)?;
     }
-
-    let schedule = Schedule::from_str(&job.schedule)?;
-
-    info!("Next 5 execution times for job {}:", job.id);
-    for datetime in schedule.upcoming(Utc).take(5) {
-        info!("-> {}", datetime);
-    }
-
-    let schedule_parts: Vec<_> = job.schedule.split_whitespace().collect();
-    let cron_schedule = match schedule_parts.len() {
-        5 => schedule_parts.join(" "),
-        0..=4 => {
-            let mut parts = schedule_parts;
-            parts.extend(std::iter::repeat("*").take(5 - parts.len()));
-            parts.join(" ")
-        },
-        _ => schedule_parts.into_iter().take(5).collect::<Vec<_>>().join(" "),
-    };
         
     let escaped_command = job.command.replace("'", "'\\''").replace("\"", "\\\"");
     let cron_entry = format!(
         "{} /usr/bin/env bash -c 'echo \"[$(date -u '+\\%Y-\\%m-\\%dT\\%H:\\%M:\\%SZ')] Job started\" >> {} && {} >> {} 2>&1 && echo \"[$(date -u '+\\%Y-\\%m-\\%dT\\%H:\\%M:\\%SZ')] Job executed successfully\" >> {} || echo \"[$(date -u '+\\%Y-\\%m-\\%dT\\%H:\\%M:\\%SZ')] Job failed with status $?\" >> {}' # Job ID: {}",
-        cron_schedule, log_file_path, escaped_command, log_file_path, log_file_path, log_file_path, job.id
+        job.schedule, log_file_path, escaped_command, log_file_path, log_file_path, log_file_path, job.id
     );
     
     info!("Cron entry: {}", cron_entry);
@@ -199,14 +171,14 @@ pub fn get_last_run_time(job_id: Uuid) -> Result<Option<DateTime<Utc>>, Box<dyn 
         }
 }
 
-// pub async fn get_job_status(pool: &PgPool, job_id: Uuid, user_id: Uuid) -> Result<(CronJob, String), Box<dyn std::error::Error>> {
-//     let job = cron_repository::get_cron_job_by_id(pool, job_id, user_id).await?;
+pub async fn get_job_status(pool: &PgPool, job_id: Uuid, user_id: Uuid) -> Result<(CronJob, String), Box<dyn std::error::Error>> {
+    let job = cron_repository::get_cron_job_by_id(pool, job_id, user_id).await?;
     
-//     let log_file_path = format!("{}/{}.log", LOG_DIR, job_id);
-//     let log_content = std::fs::read_to_string(log_file_path)?;
+    let log_file_path = format!("{}/{}.log", LOG_DIR, job_id);
+    let log_content = std::fs::read_to_string(log_file_path)?;
 
-//     Ok((job, log_content))
-// }
+    Ok((job, log_content))
+}
 
 // pub async fn update_last_run(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
 //     cron_repository::update_last_run(pool, id).await

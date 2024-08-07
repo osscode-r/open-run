@@ -28,6 +28,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
                     .route("/{id}", web::delete().to(cron_job_handler::delete_cron_job))
                     .route("/{id}", web::get().to(cron_job_handler::get_cron_job))
                     .route("/{id}", web::put().to(cron_job_handler::update_cron_job))
+                    .route("/logs/{id}", web::get().to(cron_job_handler::get_cron_job_log_by_id))
             )
             .service(
                 web::scope("/auth")
