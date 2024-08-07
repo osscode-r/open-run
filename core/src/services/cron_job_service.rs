@@ -5,13 +5,15 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use std::fs::File;
 use std::fs::OpenOptions;
+use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 use crate::models::cron_job::{CronJob, CreateCronJobRequest, UpdateCronJobRequest};
 use crate::repository::cron_repository;
 use std::path::Path;
 use std::io::{Write, Error as IoError};
 
-const LOG_DIR: &str = "/var/log/cron_jobs";
+const LOG_DIR: &str = "/var/open-run/cron_jobs/logs";
+const SCRIPT_DIR: &str = "/var/open-run/cron_jobs/scripts";
 
 pub async fn create_cron_job(pool: &PgPool, mut job: CreateCronJobRequest, user_id: Uuid) -> Result<CronJob, Box<dyn std::error::Error>> {
     job.schedule = job.schedule.trim().replace(['\'', '"'], "");
@@ -60,7 +62,6 @@ pub async fn delete_cron_job(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<(
     Ok(())
 }
 
-
 fn add_to_crontab(job: &CronJob, log_file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     info!("Adding job to crontab: {:?}", job);
 
@@ -72,8 +73,32 @@ fn add_to_crontab(job: &CronJob, log_file_path: &str) -> Result<(), Box<dyn std:
             .open(log_file_path)?;
         writeln!(file, "Log file created for Job ID: {}", job.id)?;
     }
-        
-    let escaped_command = job.command.replace("'", "'\\''").replace("\"", "\\\"");
+    
+    let script_path = format!("{}/{}.sh", SCRIPT_DIR, job.id);
+    let bash_script = job.bash_script.clone().unwrap_or_default();
+    
+    if !bash_script.is_empty() {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&script_path)?;
+        info!("Writing script to file: {}", script_path);
+        writeln!(file, "{}", bash_script)?;
+        std::fs::set_permissions(&script_path, std::fs::Permissions::from_mode(0o755))?;
+    }
+
+    let execution_command = if !bash_script.is_empty() {
+        if !job.command.is_empty() {
+            format!("{} {}", job.command, script_path)
+        } else {
+            format!("bash {}", script_path)
+        }
+    } else {
+        job.command.clone()
+    };
+
+    let escaped_command = execution_command.replace("'", "'\\''").replace("\"", "\\\"");
     let cron_entry = format!(
         "{} /usr/bin/env bash -c 'echo \"[$(date -u '+\\%Y-\\%m-\\%dT\\%H:\\%M:\\%SZ')] Job started\" >> {} && {} >> {} 2>&1 && echo \"[$(date -u '+\\%Y-\\%m-\\%dT\\%H:\\%M:\\%SZ')] Job executed successfully\" >> {} || echo \"[$(date -u '+\\%Y-\\%m-\\%dT\\%H:\\%M:\\%SZ')] Job failed with status $?\" >> {}' # Job ID: {}",
         job.schedule, log_file_path, escaped_command, log_file_path, log_file_path, log_file_path, job.id
@@ -179,64 +204,3 @@ pub async fn get_job_status(pool: &PgPool, job_id: Uuid, user_id: Uuid) -> Resul
 
     Ok((job, log_content))
 }
-
-// pub async fn update_last_run(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
-//     cron_repository::update_last_run(pool, id).await
-// }
-
-// pub async fn get_due_jobs(pool: &PgPool) -> Result<Vec<CronJob>, sqlx::Error> {
-//     let jobs = cron_repository::list_all_active_jobs(pool).await?;
-//     let now = Utc::now();
-    
-//     Ok(jobs.into_iter().filter(|job| {
-//         if let Ok(schedule) = Schedule::from_str(&job.schedule) {
-//             let next_run = job.last_run_at
-//                 .map(|last_run| schedule.after(&last_run).next())
-//                 .unwrap_or_else(|| schedule.upcoming(Utc).next());
-            
-//             if let Some(next_run) = next_run {
-//                 next_run <= now
-//             } else {
-//                 false
-//             }
-//         } else {
-//             false
-//         }
-//     }).collect())
-// }
-
-// pub async fn execute_job(pool: &PgPool, job: &CronJob) -> Result<(), Box<dyn std::error::Error>> {
-//     let output = Command::new("sh")
-//         .arg("-c")
-//         .arg(&job.command)
-//         .output()?;
-
-//     if output.status.success() {
-//         println!("Job {} executed successfully", job.id);
-//         println!("Output: {}", String::from_utf8_lossy(&output.stdout));
-//     } else {
-//         eprintln!("Job {} failed", job.id);
-//         eprintln!("Error: {}", String::from_utf8_lossy(&output.stderr));
-//     }
-
-//     update_last_run(pool, job.id).await?;
-
-//     Ok(())
-// }
-
-// pub async fn start_job_scheduler(pool: PgPool) {
-//     loop {
-//         match get_due_jobs(&pool).await {
-//             Ok(jobs) => {
-//                 for job in jobs {
-//                     if let Err(e) = execute_job(&pool, &job).await {
-//                         eprintln!("Failed to execute job {}: {}", job.id, e);
-//                     }
-//                 }
-//             }
-//             Err(e) => eprintln!("Failed to get due jobs: {}", e),
-//         }
-
-//         sleep(Duration::from_secs(60)).await;
-//     }
-// }
