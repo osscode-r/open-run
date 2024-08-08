@@ -124,14 +124,7 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     )}
                                 />
                             )}
-                            {!isNewJob && 'last_run_at' in initialJob && (
-                                <div className='col-span-2 grid grid-cols-1 lg:grid-cols-2 space-y-5'>
-                                    <div className='mt-5'>
-                                        <FormLabel>Last Run</FormLabel>
-                                        <p>{new Date(initialJob.last_run_at as string).toLocaleString()}</p>
-                                    </div>
-                                </div>
-                            )}
+
                         </div>
                         <div className="col-span-1 space-y-5">
                             <FormField
@@ -147,6 +140,18 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                     </FormItem>
                                 )}
                             />
+
+                            {!isNewJob && 'last_run_at' in initialJob && (
+                                <div>
+
+                                    <div className='col-span-2 grid grid-cols-1 lg:grid-cols-2 space-y-5'>
+                                        <div className='mt-5'>
+                                            <FormLabel>Last Run</FormLabel>
+                                            <p>{new Date(initialJob.last_run_at as string).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div className='w-full space-y-5'>
@@ -157,9 +162,9 @@ export function CronJobForm({ initialJob, onSubmit, isNewJob }: CronJobFormProps
                                 <FormItem>
                                     <FormLabel>Run Command</FormLabel>
                                     <FormControl>
-                                        <div className="flex items-center rounded-md">
-                                            <span className="bg-transparent  px-2 py-1">$</span>
-                                            <Input {...field} className="flex-1 border-none" />
+                                        <div className="flex items-center rounded-md relative">
+                                            <span className="bg-transparent px-2 py-1 absolute left-0 ">$ </span>
+                                            <Input {...field} className="flex-1 border-none pl-8" />
                                         </div>
                                     </FormControl>
                                     <FormMessage />

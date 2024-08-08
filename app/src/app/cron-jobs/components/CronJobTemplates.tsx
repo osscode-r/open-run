@@ -68,30 +68,7 @@ function CronJobTemplates({ isLoading = false }: CronJobTemplatesProps) {
 
     return (
         <>
-            <div className="relative mt-10 flex items-center space-x-4">
-                <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0 w-full'>
-                    <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full'>
-                        <SearchBar
-                            searchTerm={searchTerm}
-                            handleSearchChange={handleSearchChange}
-                            label="Search Cron Job templates..."
-                        />
-                        <SortSelect<CronTemplate>
-                            options={sortOptions}
-                            currentSort={{
-                                value: sortConfig.key,
-                                direction: sortConfig.direction,
-                                label: sortOptions.find(option =>
-                                    option.value === sortConfig.key &&
-                                    option.direction === sortConfig.direction
-                                )?.label || ''
-                            }}
-                            onSortChange={onSortChange}
-                            placeholder="Sort templates"
-                        />
-                    </div>
-                </div>
-            </div>
+
             <TemplateGrid
                 templates={paginatedTemplates}
                 handleSelectTemplate={handleSelectTemplate}
