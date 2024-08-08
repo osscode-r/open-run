@@ -1,81 +1,133 @@
-use std::fs;
-use std::path::Path;
-use std::io::Write;
-use actix_web::web;
-use futures::StreamExt;
-use chrono::{Utc};
 use uuid::Uuid;
-use crate::errors::FileManagerError;
-use crate::models::file::File;
 
-pub fn list_files(storage_path: &str) -> Result<Vec<File>, FileManagerError> {
-    let files = fs::read_dir(storage_path)
-        .map_err(|_| FileManagerError::InternalServerError)?
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let metadata = entry.metadata().ok()?;
-            Some(File {
-                id: entry.file_name().to_string_lossy().into_owned(),
-                name: entry.file_name().to_string_lossy().into_owned(),
-                size: metadata.len(),
-                created_at: metadata.created().ok()?.into(),
-                updated_at: metadata.modified().ok()?.into(),
-            })
-        })
-        .collect();
+use crate::models::file::{File, FileType};
+use std::fs::{self, create_dir, create_dir_all};
+use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
+
+pub fn create_directory(
+    _db: &sqlx::PgPool,
+    path: String,
+    name: String,
+    _user_id: Uuid,
+) -> Result<(), String> {
+    let path = Path::new(&path).join(&name);
+    let _created_dir = create_dir(path);
+    Ok(())
+}
+
+pub fn create_file(
+    _db: &sqlx::PgPool,
+    path: String,
+    name: String,
+    _user_id: Uuid,
+) -> Result<(), String> {
+    let path = Path::new(&path).join(&name);
+    let created_file = std::fs::File::create(path);
+
+    match created_file {
+        Ok(_created_file) => Ok(()),
+        Err(_e) => Err("Failed to create file".to_string()),
+    }
+}
+
+pub fn delete_file(_db: &sqlx::PgPool, path: String, _user_id: Uuid) -> Result<(), String> {
+    let path = Path::new(&path);
+
+    match std::fs::remove_file(path) {
+        Ok(_file) => Ok(()),
+        Err(_e) => Err("Failed to delete file".to_string()),
+    }
+}
+
+pub fn delete_directory(_db: &sqlx::PgPool, path: String, _user_id: Uuid) -> Result<(), String> {
+    let path = Path::new(&path);
+
+    match std::fs::remove_dir_all(path) {
+        Ok(_file) => Ok(()),
+        Err(_e) => Err("Failed to delete directory".to_string()),
+    }
+}
+
+pub fn create_directory_with_parent(
+    _db: &sqlx::PgPool,
+    path: String,
+    name: String,
+    _user_id: Uuid,
+) -> Result<(), String> {
+    let path = Path::new(&path).join(&name);
+    let _created_dir = create_dir_all(path);
+    Ok(())
+}
+
+pub fn list_files_and_directories_in_path(
+    _db: &sqlx::PgPool,
+    path: String,
+    _user_id: Uuid,
+) -> Result<Vec<File>, String> {
+    let path = Path::new(&path);
+
+    if !path.exists() {
+        return Err(format!("Path does not exist: {}", path.display()));
+    }
+
+    let mut files = Vec::new();
+
+    for entry in fs::read_dir(path).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let metadata = entry.metadata().map_err(|e| e.to_string())?;
+        let file_type = entry.file_type().map_err(|e| e.to_string())?;
+
+        let file = File {
+            path: entry.path().to_string_lossy().into_owned(),
+            name: entry.file_name().to_string_lossy().into_owned(),
+            size: metadata.len(),
+            created_at: metadata.created().map_err(|e| e.to_string())?.into(),
+            updated_at: metadata.modified().map_err(|e| e.to_string())?.into(),
+            file_type: if file_type.is_file() {
+                FileType::File
+            } else if file_type.is_dir() {
+                FileType::Directory
+            } else if file_type.is_symlink() {
+                FileType::Symlink
+            } else {
+                FileType::Other
+            },
+            permissions: metadata.permissions().mode(),
+            is_hidden: entry.file_name().to_string_lossy().starts_with('.'),
+            extension: entry
+                .path()
+                .extension()
+                .and_then(|s| s.to_str())
+                .map(String::from),
+            owner_id: get_owner_id(&metadata),
+            group_id: get_group_id(&metadata),
+        };
+
+        files.push(file);
+    }
 
     Ok(files)
 }
 
-pub async fn upload_file(
-    storage_path: &str,
-    mut payload: web::Payload,
-    filename: &str,
-) -> Result<File, FileManagerError> {
-    let file_id = Uuid::new_v4().to_string();
-    let file_path = Path::new(storage_path).join(&file_id);
-    
-    // Create the file
-    let mut file = fs::File::create(&file_path)
-        .map_err(|_| FileManagerError::InternalServerError)?;
-
-    // Use a buffer to accumulate chunks
-    let mut buffer = Vec::new();
-
-    // Read from the payload
-    while let Some(chunk) = payload.next().await {
-        let chunk = chunk.map_err(|_| FileManagerError::InternalServerError)?;
-        buffer.extend_from_slice(&chunk);
-    }
-
-    let _ = web::block(move || file.write_all(&buffer))
-        .await
-        .map_err(|_| FileManagerError::InternalServerError)?;
-
-    let metadata = fs::metadata(&file_path)
-        .map_err(|_| FileManagerError::InternalServerError)?;
-
-    Ok(File {
-        id: file_id,
-        name: filename.to_string(),
-        size: metadata.len(),
-        created_at: Utc::now(),
-        updated_at: Utc::now(),
-    })
+#[cfg(unix)]
+fn get_owner_id(metadata: &fs::Metadata) -> u32 {
+    use std::os::unix::fs::MetadataExt;
+    metadata.uid()
 }
 
-pub fn get_file_path(storage_path: &str, file_id: &str) -> Result<String, FileManagerError> {
-    let file_path = Path::new(storage_path).join(file_id);
-    if !file_path.exists() {
-        return Err(FileManagerError::NotFound);
-    }
-    Ok(file_path.to_string_lossy().into_owned())
+#[cfg(unix)]
+fn get_group_id(metadata: &fs::Metadata) -> u32 {
+    use std::os::unix::fs::MetadataExt;
+    metadata.gid()
 }
 
-pub fn delete_file(storage_path: &str) -> Result<(), FileManagerError> {
-    let file_path = Path::new(storage_path);
-    if !file_path.exists() {
-        return Err(FileManagerError::NotFound);
-    }
-    fs::remove_file(file_path).map_err(|_| FileManagerError::InternalServerError)
+#[cfg(not(unix))]
+fn get_owner_id(_metadata: &fs::Metadata) -> u32 {
+    0 // Default value for non-Unix systems
+}
+
+#[cfg(not(unix))]
+fn get_group_id(_metadata: &fs::Metadata) -> u32 {
+    0 // Default value for non-Unix systems
 }

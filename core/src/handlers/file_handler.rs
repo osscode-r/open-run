@@ -1,50 +1,146 @@
+use std::path::Path;
+
+use crate::{
+    models::file::{CreateDirectoryRequest, CreateDirectoryResponse, DeleteFileRequest, FileListResponse},
+    services::file_service,
+    AppState, TokenClaims,
+};
 use actix_web::{web, HttpResponse, Responder};
-use actix_files::NamedFile;
-use std::path::PathBuf;
-use crate::services::file_service;
-use crate::errors::FileManagerError;
-use crate::AppState;
-use serde::Deserialize;
+use log::info;
 
-pub async fn list_files(data: web::Data<AppState>) -> Result<impl Responder, FileManagerError> {
-    let config = &data.config;
-    let files = file_service::list_files(&config.file_storage_path)?;
-    Ok(HttpResponse::Ok().json(files))
-}
-
-#[derive(Deserialize)]
-pub struct FilePathQuery {
-    file_path: String,
-}
-
-pub async fn list_file_by_id(
+pub async fn create_directory(
     data: web::Data<AppState>,
-    query: web::Query<FilePathQuery>
-) -> Result<impl Responder, FileManagerError> {
-    let config = &data.config;
-    let name = query.file_path.clone();
-    let file_path = file_service::get_file_path(&config.file_storage_path, &name)?;
-    println!("file_path: {}", file_path);
-    let file = file_service::list_files(&file_path)?;
-    Ok(HttpResponse::Ok().json(file))
+    req: web::Json<CreateDirectoryRequest>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let req = req.into_inner();
+    let path = req.path.clone();
+    let name = req.name.clone();
+    info!("Creating directory: {} in path: {}", name, path);
+
+    let dir_path = Path::new(&path).join(&name);
+    if dir_path.exists() {
+        return HttpResponse::Conflict().json(CreateDirectoryResponse {
+            success: false,
+            message: "Directory already exists".to_string(),
+        });
+    }
+    match file_service::create_directory(&data.db, path, name, claims.sub) {
+        Ok(_file) => HttpResponse::Created().json(CreateDirectoryResponse {
+            success: true,
+            message: "Directory created successfully".to_string(),
+        }),
+        Err(_e) => HttpResponse::InternalServerError().json(CreateDirectoryResponse {
+            success: false,
+            message: "Failed to create directory".to_string(),
+        }),
+    }
 }
 
-pub async fn download_file(
+pub async fn create_file(
     data: web::Data<AppState>,
-    file_id: web::Path<String>,
-) -> Result<impl Responder, FileManagerError> {
-    let config = &data.config;
-    let file_path = file_service::get_file_path(&config.file_storage_path, &file_id)?;
-    let path: PathBuf = file_path.into();
-    Ok(NamedFile::open(path))
+    req: web::Json<CreateDirectoryRequest>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let req = req.into_inner();
+    let path = req.path.clone();
+    let name = req.name.clone();
+    info!("Creating file: {} in path: {}", name, path);
+
+    match file_service::create_file(&data.db, path, name, claims.sub) { 
+        Ok(_file) => HttpResponse::Created().json(CreateDirectoryResponse {
+            success: true,
+            message: "File created successfully".to_string(),
+        }),
+        Err(_e) => HttpResponse::InternalServerError().json(CreateDirectoryResponse {
+            success: false,
+            message: "Failed to create file".to_string(),
+        }),
+    }
 }
 
 pub async fn delete_file(
     data: web::Data<AppState>,
-    file_id: web::Path<String>,
-) -> Result<impl Responder, FileManagerError> {
-    let config = &data.config;
-    let file_path = file_service::get_file_path(&config.file_storage_path, &file_id)?;
-    file_service::delete_file(&file_path)?;
-    Ok(HttpResponse::NoContent().finish())
+    req: web::Json<DeleteFileRequest>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let req = req.into_inner();
+    let path = req.path.clone();
+    info!("Deleting file in path: {}", path);
+
+    match file_service::delete_file(&data.db, path, claims.sub) {
+        Ok(_file) => HttpResponse::Ok().json(CreateDirectoryResponse {
+            success: true,
+            message: "File deleted successfully".to_string(),
+        }),
+        Err(_e) => HttpResponse::InternalServerError().json(CreateDirectoryResponse {
+            success: false,
+            message: "Failed to delete file".to_string(),
+        }),
+    }
+}
+
+pub async fn delete_directory(
+    data: web::Data<AppState>,
+    req: web::Json<DeleteFileRequest>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let req = req.into_inner();
+    let path = req.path.clone();
+    info!("Deleting directory in path: {}", path);  
+
+    match file_service::delete_directory(&data.db, path, claims.sub) {  
+        Ok(_file) => HttpResponse::Ok().json(CreateDirectoryResponse {
+            success: true,
+            message: "Directory deleted successfully".to_string(),
+        }),
+        Err(_e) => HttpResponse::InternalServerError().json(CreateDirectoryResponse {
+            success: false,
+            message: "Failed to delete directory".to_string(),
+        }),
+    }
+}
+
+pub async fn create_directory_with_parent(
+    data: web::Data<AppState>,
+    req: web::Json<CreateDirectoryRequest>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let req = req.into_inner();
+    let path = req.path.clone();
+    let name = req.name.clone();
+    info!("Creating directory: {} in path: {}", name, path);
+    match file_service::create_directory_with_parent(&data.db, path, name, claims.sub) {
+        Ok(_file) => HttpResponse::Created().json(CreateDirectoryResponse { 
+            success: true,
+            message: "Directory created successfully".to_string(),
+        }),
+        Err(_e) => HttpResponse::InternalServerError().json(CreateDirectoryResponse {
+            success: false,
+            message: "Failed to create directory".to_string(),
+        }),
+    }
+}
+
+pub async fn list_files_and_directories_in_path(
+    data: web::Data<AppState>,
+    req: web::Query<DeleteFileRequest>,
+    claims: web::ReqData<TokenClaims>,
+) -> impl Responder {
+    let req = req.into_inner();
+    let path = req.path.clone();
+    info!("Listing files and directories in path: {}", path);
+
+    match file_service::list_files_and_directories_in_path(&data.db, path, claims.sub) {
+        Ok(file) => HttpResponse::Ok().json(FileListResponse {
+            success: true,
+            message: "Files and directories listed successfully".to_string(),
+            data: Some(file),
+        }),
+        Err(_e) => HttpResponse::InternalServerError().json(FileListResponse {
+            success: false,
+            message: "Failed to list files and directories".to_string(),
+            data: None
+        }),
+    }
 }
