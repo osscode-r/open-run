@@ -35,10 +35,10 @@ const DashboardLayout = ({ children }: React.PropsWithChildren) => {
     }
 
     const breadcrumbs = getBreadcrumbs()
-    // if(!isAuthenticated) {
-    //     router.push('/login')
-    //     return <div className="flex h-screen w-full items-center justify-center">Please login to continue</div>
-    // }
+    if(!isAuthenticated) {
+        router.push('/login')
+        return <div className="flex h-screen w-full items-center justify-center">Please login to continue</div>
+    }
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <Sidebar />

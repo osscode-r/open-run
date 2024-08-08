@@ -8,5 +8,11 @@ export enum CRONJOBURLS {
 }
 
 export enum FILEMANAGERURLS {
-    LIST_FILES_AT_PATH = 'v1/files/list-files-and-directories-in-path'
+    LIST_FILES_AT_PATH = 'v1/files/list-files-and-directories-in-path',
+    CREATE_DIRECTORY = 'v1/files/create-directory',
+    DELETE_FILE = 'v1/files/delete-file',
+    CREATE_FILE = 'v1/files/create-file',
+    DELETE_DIRECTORY = 'v1/files/delete-directory',
+    RENAME_FILE = 'v1/files/rename-file',
+    RENAME_DIRECTORY = 'v1/files/rename-directory',
 }
