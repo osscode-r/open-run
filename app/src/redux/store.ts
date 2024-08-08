@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage";
 import { authApi } from "@/redux/services/users/authApi";
 import authReducer from "@/redux/features/users/authSlice";
 import { cronJobsApi } from "./services/cronJobsApi";
+import { fileManagersApi } from "./services/fileManagersApi";
 
 const persistConfig = {
   key: "root",
@@ -14,7 +15,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
   auth: authReducer,
-  [cronJobsApi.reducerPath]: cronJobsApi.reducer
+  [cronJobsApi.reducerPath]: cronJobsApi.reducer,
+  [fileManagersApi.reducerPath]: fileManagersApi.reducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -26,7 +28,7 @@ const storeOptions: ConfigureStoreOptions = {
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware, cronJobsApi.middleware),
+    }).concat(authApi.middleware, cronJobsApi.middleware, fileManagersApi.middleware),
 };
 
 export const store = configureStore(storeOptions);
